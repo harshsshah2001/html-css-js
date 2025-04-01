@@ -2571,60 +2571,185 @@
     <script defer src="assets/js/alpine-focus.min.js"></script>
     <script defer src="assets/js/alpine.min.js"></script>
     <script>
-        document.getElementById('appointmentForm').addEventListener('submit', async function (event) {
-            event.preventDefault();
-
-            // Reset error messages
-            document.querySelectorAll('.error').forEach(el => el.innerText = '');
-            document.getElementById('successMessage').style.display = 'none';
-            document.getElementById('errorMessage').style.display = 'none';
-
-            let firstName = document.getElementById('firstName').value.trim();
-            let lastName = document.getElementById('lastName').value.trim();
-            let date = document.getElementById('date').value;
-            let allocatedTime = document.getElementById('allocatedTime').value;
-            let visitorEmail = document.getElementById('visitorEmail').value.trim();
-
-            let errors = {};
-            if (!/^[a-zA-Z\s]{2,}$/.test(firstName)) errors.firstName = 'First name must be at least 2 characters and contain only letters';
-            if (!/^[a-zA-Z\s]{2,}$/.test(lastName)) errors.lastName = 'Last name must be at least 2 characters and contain only letters';
-            if (!/^\S+@\S+\.\S+$/.test(visitorEmail)) errors.visitorEmail = 'Please enter a valid email address';
-
-            let today = new Date();
-            today.setHours(0, 0, 0, 0);
-            let selectedDate = new Date(date);
-            selectedDate.setHours(0, 0, 0, 0);
-            if (selectedDate < today) errors.date = 'Date must be today or later';
-
-            if (Object.keys(errors).length > 0) {
-                for (let key in errors) {
-                    document.getElementById(`${key}Error`).innerText = errors[key];
-                }
-                return;
-            }
-
-            let formData = { firstName, lastName, date, allocatedTime, visitorEmail };
-            try {
-                let response = await fetch('http://192.168.3.73:3001/appointment/create', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('appointmentForm');
+            const successMessage = document.getElementById('successMessage');
+            const errorMessage = document.getElementById('errorMessage');
+            let loading = false;
+        
+            const formData = {
+                firstName: '',
+                lastName: '',
+                date: '',
+                allocatedTime: '',
+                visitorEmail: ''
+            };
+        
+            const parseQueryParams = () => {
+                const hash = window.location.hash;
+                const queryString = hash.split('?')[1];
+                if (!queryString) return;
+        
+                const params = new URLSearchParams(queryString);
+                formData.visitorEmail = decodeURIComponent(params.get('email') || '');
+                formData.allocatedTime = decodeURIComponent(params.get('time') || '');
+                formData.date = decodeURIComponent(params.get('date') || '');
+        
+                updateInputs();
+            };
+        
+            const updateInputs = () => {
+                Object.keys(formData).forEach(key => {
+                    const input = document.getElementById(key === 'visitorEmail' ? 'visitorEmail' : key);
+                    if (input) input.value = formData[key];
                 });
-
-                if (!response.ok) {
-                    throw new Error('Failed to schedule appointment. Please try again.');
+            };
+        
+            parseQueryParams();
+        
+            const validateField = (name, value) => {
+                let error = '';
+                switch (name) {
+                    case 'firstName':
+                    case 'lastName':
+                        if (value && !value.match(/^[a-zA-Z\s]{2,}$/)) {
+                            error = `${name === 'firstName' ? 'First' : 'Last'} name must be at least 2 characters and contain only letters`;
+                        }
+                        break;
+                    case 'visitorEmail':
+                        if (value && !value.match(/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/)) {
+                            error = 'Please enter a valid email address';
+                        }
+                        break;
+                    case 'allocatedTime':
+                        if (value && formData.date) {
+                            const selectedDate = new Date(formData.date);
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            selectedDate.setHours(0, 0, 0, 0);
+                            if (selectedDate.getTime() === today.getTime()) {
+                                const [hours, minutes] = value.split(':').map(Number);
+                                const now = new Date();
+                                const currentHours = now.getHours();
+                                const currentMinutes = now.getMinutes();
+                                if (hours < currentHours || (hours === currentHours && minutes <= currentMinutes)) {
+                                    error = 'Time cannot be in the past for today';
+                                }
+                            }
+                        }
+                        break;
+                    case 'date':
+                        if (value) {
+                            const selectedDate = new Date(value);
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            if (selectedDate < today) {
+                                error = 'Date must be today or later';
+                            }
+                        }
+                        break;
                 }
-
-                let result = await response.json();
-                document.getElementById('successMessage').innerText = 'Appointment scheduled successfully!';
-                document.getElementById('successMessage').style.display = 'block';
-                document.getElementById('appointmentForm').reset();
-            } catch (error) {
-                document.getElementById('errorMessage').innerText = error.message;
-                document.getElementById('errorMessage').style.display = 'block';
-            }
+                return error;
+            };
+        
+            const handleChange = (e) => {
+                const { id, value } = e.target;
+                const name = id === 'visitorEmail' ? 'visitorEmail' : id;
+                formData[name] = value;
+                const error = validateField(name, value);
+                const errorElement = document.getElementById(`${name}Error`);
+                const inputElement = document.getElementById(id);
+                if (error) {
+                    errorElement.textContent = error;
+                    inputElement.classList.add('error');
+                } else {
+                    errorElement.textContent = '';
+                    inputElement.classList.remove('error');
+                }
+                if (name === 'date' && formData.allocatedTime) {
+                    const timeError = validateField('allocatedTime', formData.allocatedTime);
+                    const timeErrorElement = document.getElementById('allocatedTimeError');
+                    const timeInput = document.getElementById('allocatedTime');
+                    if (timeError) {
+                        timeErrorElement.textContent = timeError;
+                        timeInput.classList.add('error');
+                    } else {
+                        timeErrorElement.textContent = '';
+                        timeInput.classList.remove('error');
+                    }
+                }
+            };
+        
+            const validateForm = () => {
+                const errors = {};
+                Object.keys(formData).forEach(key => {
+                    const error = validateField(key, formData[key]);
+                    if (error) errors[key] = error;
+                });
+                Object.keys(errors).forEach(key => {
+                    document.getElementById(`${key}Error`).textContent = errors[key];
+                    document.getElementById(key === 'visitorEmail' ? 'visitorEmail' : key).classList.add('error');
+                });
+                return Object.keys(errors).length === 0;
+            };
+        
+            form.querySelectorAll('input').forEach(input => input.addEventListener('input', handleChange));
+        
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // Reset messages
+                successMessage.style.display = 'none';
+                errorMessage.style.display = 'none';
+        
+                if (!validateForm()) {
+                    errorMessage.textContent = 'Please fix all errors before submitting';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+        
+                if (loading) return;
+                loading = true;
+                const submitBtn = form.querySelector('button[type="submit"]');
+                submitBtn.textContent = 'Scheduling...';
+                submitBtn.disabled = true;
+        
+                const formattedData = {
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    date: formData.date,
+                    allocatedTime: formData.allocatedTime,
+                    visitorEmail: formData.visitorEmail
+                };
+        
+                try {
+                    const response = await fetch('http://192.168.3.73:3001/appointment/create', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formattedData)
+                    });
+        
+                    if (!response.ok) {
+                        throw new Error('Failed to schedule appointment. Please try again.');
+                    }
+        
+                    const result = await response.json();
+                    successMessage.textContent = 'Appointment scheduled successfully!';
+                    successMessage.style.display = 'block';
+                    form.reset();
+                    Object.keys(formData).forEach(key => formData[key] = '');
+                    document.querySelectorAll('.error').forEach(el => el.textContent = '');
+                } catch (error) {
+                    errorMessage.textContent = error.message;
+                    errorMessage.style.display = 'block';
+                } finally {
+                    loading = false;
+                    submitBtn.textContent = 'Schedule Appointment';
+                    submitBtn.disabled = false;
+                }
+            });
         });
-    </script>
+        </script>
     <script src="assets/js/custom.js"></script>
     <script>
         document.addEventListener('alpine:init', () => {
