@@ -402,6 +402,74 @@
         </div>
     </div>
 
+    <!-- Update User Modal -->
+    <div class="modal" id="updateUserModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>Update User</h5>
+                <span class="close-btn" onclick="closeUpdateUserModal()">×</span>
+            </div>
+            <div class="form-container">
+                <form id="updateUserForm" autocomplete="off">
+                    <input type="hidden" name="id" id="updateUserId">
+                    <div class="form-row">
+                        <!-- Left Column -->
+                        <div class="form-column">
+                            <div class="form-group" id="updateFirstNameField">
+                                <label for="updateFirstName">First Name</label>
+                                <input type="text" placeholder="Enter First Name" name="firstName" id="updateFirstName">
+                            </div>
+                            <div class="form-group" id="updateLastNameField">
+                                <label for="updateLastName">Last Name</label>
+                                <input type="text" placeholder="Enter Last Name" name="lastName" id="updateLastName">
+                            </div>
+                            <div class="form-group" id="updateUserNameField">
+                                <label for="updateUserName">User Name</label>
+                                <input type="text" placeholder="Enter User Name" name="userName" id="updateUserName" autocomplete="off">
+                            </div>
+                            <div class="form-group" id="updatePasswordField">
+                                <label for="updatePassword">Password (Leave blank to keep unchanged)</label>
+                                <input type="password" placeholder="Enter New Password" name="password" id="updatePassword" autocomplete="off">
+                            </div>
+                            <div class="form-group" id="updateConfirmPasswordField">
+                                <label for="updateConfirmPassword">Confirm Password</label>
+                                <input type="password" placeholder="Confirm New Password" name="confirmPassword" id="updateConfirmPassword" autocomplete="off">
+                            </div>
+                        </div>
+                        <!-- Right Column -->
+                        <div class="form-column">
+                            <div class="form-group" id="updateContactNoField">
+                                <label for="updateContactNo">Contact No.</label>
+                                <input type="text" placeholder="Enter Contact No." name="contactNo" id="updateContactNo" autocomplete="off">
+                            </div>
+                            <div class="form-group" id="updateEmailIdField">
+                                <label for="updateEmailId">Email Id</label>
+                                <input type="email" placeholder="Enter Email Id" name="emailId" id="updateEmailId">
+                            </div>
+                            <div class="form-group" id="updateAddressField">
+                                <label for="updateAddress">Address</label>
+                                <input type="text" placeholder="Enter Address" name="address" id="updateAddress">
+                            </div>
+                            <div class="form-group" id="updateUserRoleField">
+                                <label>User Role</label>
+                                <select id="updateUserRoleId" name="userRoleId">
+                                    <option value="">Select Userrole</option>
+                                    <option value="1">Admin</option>
+                                    <option value="2">User</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Notes</label>
+                                <textarea name="notes" id="updateNotes" placeholder="Enter Notes"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-outline-primary">Update</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nice-select/1.1.0/js/jquery.nice-select.min.js"></script>
     <script>
@@ -409,7 +477,7 @@
         let entriesPerPage = 10;
         let isPaginatedView = false; // Track the current view mode
 
-        // Modal Functions
+        // Modal Functions for Add User
         function openAddUserModal() {
             document.getElementById('addUserModal').style.display = 'flex';
             NiceSelect.bind(document.getElementById("UserRoleId"), { searchable: true });
@@ -418,6 +486,36 @@
         function closeAddUserModal() {
             document.getElementById('addUserModal').style.display = 'none';
             document.getElementById('addUserForm').reset();
+            $('.form-group').removeClass('has-error has-success');
+        }
+
+        // Modal Functions for Update User
+        function openUpdateUserModal(userId) {
+            fetchUserData(userId).then(user => {
+                // Pre-fill the form with user data
+                document.getElementById('updateUserId').value = user.id;
+                document.getElementById('updateFirstName').value = user.firstName;
+                document.getElementById('updateLastName').value = user.lastName;
+                document.getElementById('updateUserName').value = user.userName;
+                document.getElementById('updateContactNo').value = user.contactNo || '';
+                document.getElementById('updateEmailId').value = user.emailId || '';
+                document.getElementById('updateAddress').value = user.address || '';
+                document.getElementById('updateUserRoleId').value = user.userRoleId || '';
+                document.getElementById('updateNotes').value = user.notes || '';
+
+                // Initialize NiceSelect for the user role dropdown
+                NiceSelect.bind(document.getElementById("updateUserRoleId"), { searchable: true });
+
+                // Show the modal
+                document.getElementById('updateUserModal').style.display = 'flex';
+            }).catch(error => {
+                showMessage('Error fetching user data', 'error');
+            });
+        }
+
+        function closeUpdateUserModal() {
+            document.getElementById('updateUserModal').style.display = 'none';
+            document.getElementById('updateUserForm').reset();
             $('.form-group').removeClass('has-error has-success');
         }
 
@@ -442,7 +540,7 @@
                             </label>
                         </td>
                         <td class="action-icons">
-                            <i class="fas fa-edit" onclick="editUser(${user.id})"></i>
+                            <i class="fas fa-edit" onclick="openUpdateUserModal(${user.id})"></i>
                             <i class="fas fa-trash" onclick="deleteUser(${user.id})"></i>
                         </td>
                     `;
@@ -464,8 +562,7 @@
             const searchQuery = document.getElementById('searchInput').value;
 
             try {
-                const response = await fetch(`http://192.168.3.73:3001/users?page=${currentPage}&limit=${entriesPerPage}&search=${searchQuery}`);
-
+                const response = await fetch(`http://192.168.3.75:3001/users?page=${currentPage}&limit=${entriesPerPage}&search=${searchQuery}`);
                 const data = await response.json();
 
                 const tbody = document.getElementById('userTableBody');
@@ -483,7 +580,7 @@
                             </label>
                         </td>
                         <td class="action-icons">
-                            <i class="fas fa-edit" onclick="editUser(${user.id})"></i>
+                            <i class="fas fa-edit" onclick="openUpdateUserModal(${user.id})"></i>
                             <i class="fas fa-trash" onclick="deleteUser(${user.id})"></i>
                         </td>
                     `;
@@ -497,6 +594,16 @@
                 console.error('Error fetching users:', error);
                 showMessage('Error fetching users', 'error');
             }
+        }
+
+        // Fetch a single user's data
+        async function fetchUserData(userId) {
+            const response = await fetch(`http://192.168.3.75:3001/users/${userId}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch user data');
+            }
+            const data = await response.json();
+            return data.user;
         }
 
         // Toggle user active status
@@ -525,17 +632,11 @@
             }
         }
 
-        // Edit user (redirect to edit page)
-        function editUser(userId) {
-            window.location.href = `edit-user.html?id=${userId}`;
-        }
-
         // Delete user
         async function deleteUser(userId) {
             if (confirm('Are you sure you want to delete this user?')) {
                 try {
                     await fetch(`http://192.168.3.75:3001/users/${userId}`, {
-
                         method: 'DELETE',
                     });
                     // Refresh the table based on the current view
@@ -551,7 +652,7 @@
             }
         }
 
-        // Form Submission
+        // Form Submission for Add User
         $(document).ready(function () {
             $("#addUserForm").submit(function (event) {
                 event.preventDefault();
@@ -603,6 +704,7 @@
                     userRoleId: parseInt($("#UserRoleId").val()),
                     notes: $("textarea[name='notes']").val() || null,
                 };
+
                 fetch('http://192.168.3.75:3001/users', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -625,12 +727,91 @@
                 .catch(error => showMessage(error.message || 'Error creating user', 'error'));
             });
 
-            // Remove error class on input
+            // Form Submission for Update User
+            $("#updateUserForm").submit(function (event) {
+                event.preventDefault();
+
+                const password = $("#updatePassword").val();
+                const confirmPassword = $("#updateConfirmPassword").val();
+
+                // Client-side validation
+                if (!$("#updateFirstName").val()) {
+                    $("#updateFirstNameField").addClass("has-error");
+                    showMessage("First Name is required", "error");
+                    return;
+                }
+                if (!$("#updateLastName").val()) {
+                    $("#updateLastNameField").addClass("has-error");
+                    showMessage("Last Name is required", "error");
+                    return;
+                }
+                if (!$("#updateUserName").val()) {
+                    $("#updateUserNameField").addClass("has-error");
+                    showMessage("User Name is required", "error");
+                    return;
+                }
+                if (password && password !== confirmPassword) {
+                    $("#updatePasswordField").addClass("has-error");
+                    $("#updateConfirmPasswordField").addClass("has-error");
+                    showMessage("Passwords do not match", "error");
+                    return;
+                }
+                if (!$("#updateUserRoleId").val()) {
+                    $("#updateUserRoleField").addClass("has-error");
+                    showMessage("User Role is required", "error");
+                    return;
+                }
+
+                const formData = {
+                    firstName: $("#updateFirstName").val(),
+                    lastName: $("#updateLastName").val(),
+                    userName: $("#updateUserName").val(),
+                    contactNo: $("#updateContactNo").val() || null,
+                    emailId: $("#updateEmailId").val() || null,
+                    address: $("#updateAddress").val() || null,
+                    userRoleId: parseInt($("#updateUserRoleId").val()),
+                    notes: $("#updateNotes").val() || null,
+                };
+
+                // Only include password if it's provided
+                if (password) {
+                    formData.password = password;
+                }
+
+                const userId = $("#updateUserId").val();
+
+                fetch(`http://192.168.3.75:3001/users/${userId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData),
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to update user');
+                    return response.json();
+                })
+                .then(data => {
+                    showMessage(data.message, 'success');
+                    closeUpdateUserModal();
+                    // Refresh the table based on the current view
+                    if (isPaginatedView) {
+                        fetchUsers();
+                    } else {
+                        fetchAllUsers();
+                    }
+                })
+                .catch(error => showMessage(error.message || 'Error updating user', 'error'));
+            });
+
+            // Remove error class on input for both forms
             $("#FirstName, #LastName, #email, #password, #ConfirmPassword, #UserRoleId").on("input change", function () {
                 $(this).closest(".form-group").removeClass("has-error").addClass("has-success");
             });
 
-            $("#email").on("input", function () {
+            $("#updateFirstName, #updateLastName, #updateUserName, #updatePassword, #updateConfirmPassword, #updateUserRoleId").on("input change", function () {
+                $(this).closest(".form-group").removeClass("has-error").addClass("has-success");
+            });
+
+            $("#email, #updateUserName").on("input", function () {
                 this.value = this.value.replace(/\s+/g, "").toLowerCase();
             });
         });
