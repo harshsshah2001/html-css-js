@@ -2576,7 +2576,7 @@
             const successMessage = document.getElementById('successMessage');
             const errorMessage = document.getElementById('errorMessage');
             let loading = false;
-        
+
             const formData = {
                 firstName: '',
                 lastName: '',
@@ -2584,29 +2584,29 @@
                 allocatedTime: '',
                 visitorEmail: ''
             };
-        
+
             const parseQueryParams = () => {
                 const hash = window.location.hash;
                 const queryString = hash.split('?')[1];
                 if (!queryString) return;
-        
+
                 const params = new URLSearchParams(queryString);
                 formData.visitorEmail = decodeURIComponent(params.get('email') || '');
                 formData.allocatedTime = decodeURIComponent(params.get('time') || '');
                 formData.date = decodeURIComponent(params.get('date') || '');
-        
+
                 updateInputs();
             };
-        
+
             const updateInputs = () => {
                 Object.keys(formData).forEach(key => {
                     const input = document.getElementById(key === 'visitorEmail' ? 'visitorEmail' : key);
                     if (input) input.value = formData[key];
                 });
             };
-        
+
             parseQueryParams();
-        
+
             const validateField = (name, value) => {
                 let error = '';
                 switch (name) {
@@ -2651,7 +2651,7 @@
                 }
                 return error;
             };
-        
+
             const handleChange = (e) => {
                 const { id, value } = e.target;
                 const name = id === 'visitorEmail' ? 'visitorEmail' : id;
@@ -2679,7 +2679,7 @@
                     }
                 }
             };
-        
+
             const validateForm = () => {
                 const errors = {};
                 Object.keys(formData).forEach(key => {
@@ -2692,28 +2692,44 @@
                 });
                 return Object.keys(errors).length === 0;
             };
-        
+
+            // Define the showMessage function for toast notifications
+            const showMessage = (msg = 'Example notification text.', position = 'top', showCloseButton = true, closeButtonHtml = '', duration = 3000) => {
+                const toast = window.Swal.mixin({
+                    toast: true,
+                    position: position || 'top',
+                    showConfirmButton: false,
+                    timer: duration,
+                    showCloseButton: showCloseButton,
+                });
+                toast.fire({
+                    icon: 'success', // Add success icon to match the image
+                    title: msg,
+                    padding: '10px 20px',
+                });
+            };
+
             form.querySelectorAll('input').forEach(input => input.addEventListener('input', handleChange));
-        
+
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                
+
                 // Reset messages
                 successMessage.style.display = 'none';
                 errorMessage.style.display = 'none';
-        
+
                 if (!validateForm()) {
                     errorMessage.textContent = 'Please fix all errors before submitting';
                     errorMessage.style.display = 'block';
                     return;
                 }
-        
+
                 if (loading) return;
                 loading = true;
                 const submitBtn = form.querySelector('button[type="submit"]');
                 submitBtn.textContent = 'Scheduling...';
                 submitBtn.disabled = true;
-        
+
                 const formattedData = {
                     firstName: formData.firstName,
                     lastName: formData.lastName,
@@ -2721,21 +2737,21 @@
                     allocatedTime: formData.allocatedTime,
                     visitorEmail: formData.visitorEmail
                 };
-        
+
                 try {
                     const response = await fetch('http://192.168.3.73:3001/appointment/create', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(formattedData)
                     });
-        
+
                     if (!response.ok) {
                         throw new Error('Failed to schedule appointment. Please try again.');
                     }
-        
+
                     const result = await response.json();
-                    successMessage.textContent = 'Appointment scheduled successfully!';
-                    successMessage.style.display = 'block';
+                    // Show toast message instead of updating the successMessage element
+                    showMessage('Appointment scheduled successfully!');
                     form.reset();
                     Object.keys(formData).forEach(key => formData[key] = '');
                     document.querySelectorAll('.error').forEach(el => el.textContent = '');
@@ -2749,7 +2765,7 @@
                 }
             });
         });
-        </script>
+    </script>
     <script src="assets/js/custom.js"></script>
     <script>
         document.addEventListener('alpine:init', () => {
