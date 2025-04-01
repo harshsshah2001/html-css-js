@@ -601,7 +601,7 @@
                                             </div>
                                         </a>
                                     </li>
-                                    <li class="nav-item">
+                                    <!-- <li class="nav-item">
                                         <a href="apps-mailbox.html" class="group">
                                             <div class="flex items-center">
                                                 <svg
@@ -633,7 +633,7 @@
                                                 <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">Mailbox</span>
                                             </div>
                                         </a>
-                                    </li>
+                                    </li> -->
                                     <li class="nav-item">
                                         <a href="apps-todolist.html" class="group">
                                             <div class="flex items-center">
@@ -2433,9 +2433,9 @@
                                     <li>
                                         <a href="apps-chat.html">Chat</a>
                                     </li>
-                                    <li>
+                                    <!-- <li>
                                         <a href="apps-mailbox.html">Mailbox</a>
-                                    </li>
+                                    </li> -->
                                     <li>
                                         <a href="apps-todolist.html">Todo List</a>
                                     </li>
@@ -3205,7 +3205,7 @@
         
                 let formData = { firstName, lastName, date, allocatedTime, visitorEmail };
                 try {
-                    let response = await fetch('http://192.168.3.75:3001/appointment/create', {
+                    let response = await fetch('http://192.168.3.73:3001/appointment/create', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(formData)

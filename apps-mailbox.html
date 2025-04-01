@@ -272,7 +272,7 @@
 
             async function checkFormStatus() {
                 try {
-                    const response = await fetch(`http://192.168.3.75:3001/appointment/check-status?email=${formData.visitorEmail}&date=${formData.date}&time=${formData.allocatedTime}`);
+                    const response = await fetch(`http://192.168.3.73:3001/appointment/check-status?email=${formData.visitorEmail}&date=${formData.date}&time=${formData.allocatedTime}`);
                     const data = await response.json();
                     isFormCompleted = data.isFormCompleted;
                     localStorage.setItem(`formCompleted_${formKey}`, isFormCompleted); // Cache status
@@ -286,7 +286,7 @@
 
             async function checkNationalId(nationalId) {
                 try {
-                    const response = await fetch(`http://192.168.3.75:3001/appointment/check-national-id?national_id=${nationalId}`);
+                    const response = await fetch(`http://192.168.3.73:3001/appointment/check-national-id?national_id=${nationalId}`);
                     const data = await response.json();
                     if (data.exists) {
                         errors.national_id = 'This National ID is already used for another appointment.';
@@ -348,7 +348,7 @@
                 }
 
                 try {
-                    const response = await fetch('http://192.168.3.75:3001/appointment/create', {
+                    const response = await fetch('http://192.168.3.73:3001/appointment/create', {
                         method: 'POST',
                         body: formDataToSend
                     });

@@ -731,7 +731,7 @@ button:disabled {
                                             </div>
                                         </a>
                                     </li>
-                                    <li class="nav-item">
+                                    <!-- <li class="nav-item">
                                         <a href="apps-mailbox.html" class="group">
                                             <div class="flex items-center">
                                                 <svg
@@ -763,7 +763,7 @@ button:disabled {
                                                 <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">Mailbox</span>
                                             </div>
                                         </a>
-                                    </li>
+                                    </li> -->
                                     <li class="nav-item">
                                         <a href="apps-todolist.html" class="active group">
                                             <div class="flex items-center">
@@ -2278,9 +2278,9 @@ button:disabled {
                                     <li>
                                         <a href="apps-chat.html">Chat</a>
                                     </li>
-                                    <li>
+                                    <!-- <li>
                                         <a href="apps-mailbox.html">Mailbox</a>
-                                    </li>
+                                    </li> -->
                                     <li>
                                         <a href="apps-todolist.html" class="active">Todo List</a>
                                     </li>
@@ -3209,7 +3209,7 @@ button:disabled {
                     console.log('Sending Data:', formattedData);
             
                     try {
-                        const response = await axios.post('http://192.168.3.75:3001/visitors', formattedData, {
+                        const response = await axios.post('http://192.168.3.73:3001/visitors', formattedData, {
                             headers: { 'Content-Type': 'application/json' }
                         });
                         console.log('Response:', response.data);
