@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visitor Form</title>
+    <style>
+        /* CSS remains unchanged */
+        .hide-except-form > *:not(#visitor-form) {
+            visibility: hidden;
+        }
+
+        #visitor-form {
+            visibility: visible !important;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        .form-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+            background: linear-gradient(to right, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .field-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .field-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        label {
+            font-weight: bold;
+            font-size: 1rem;
+            color: #333;
+            width: 40%;
+        }
+
+        input, textarea {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: #f8f9fa;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .error {
+            border-color: red;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 0.8rem;
+            margin-left: 40%;
+        }
+
+        .photo-button {
+            padding: 12px 15px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: #f8f9fa;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+        }
+
+        .photo-options {
+            margin-top: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .photo-options button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .gallery-btn {
+            background: #667eea;
+        }
+
+        .camera-btn {
+            background: #764ba2;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(to right, #667eea, #764ba2);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
+
+        .success-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+
+        .success-container h1 {
+            color: #3f51b5;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-bottom: 2px solid #3f51b5;
+            padding-bottom: 0.5rem;
+        }
+
+        .success-container p {
+            font-size: 1rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body class="hide-except-form">
+    <div id="visitor-form"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            let formData = {
+                firstName: urlParams.get('firstName') || '',
+                lastName: urlParams.get('lastName') || '',
+                date: urlParams.get('date') || '',
+                allocatedTime: formatTime(urlParams.get('time') || ''),
+                visitorEmail: urlParams.get('email') || '',
+                national_id: '',
+                photo: null,
+                mobile_number: '',
+                personal_details: '',
+                note: ''
+            };
+            let errors = {};
+            let loading = false;
+            let successMessage = '';
+            let errorMessage = '';
+            let showPhotoOptions = false;
+            let isFormCompleted = false;
+
+            // Add local storage check for completion status
+            const formKey = `${formData.visitorEmail}-${formData.date}-${formData.allocatedTime}`;
+            isFormCompleted = localStorage.getItem(`formCompleted_${formKey}`) === 'true';
+
+            function formatTime(rawTime) {
+                if (!rawTime) return '';
+                const timeParts = rawTime.split(' ');
+                return timeParts.length > 1 ? timeParts[0] : rawTime.split(':').slice(0, 2).join(':');
+            }
+
+            function validateField(name, value) {
+                let error = '';
+                switch (name) {
+                    case 'firstName':
+                    case 'lastName':
+                        if (value && !/^[a-zA-Z\s]{2,}$/.test(value)) {
+                            error = `${name === 'firstName' ? 'First' : 'Last'} name must be at least 2 characters and contain only letters`;
+                        }
+                        break;
+                    case 'visitorEmail':
+                        if (value && !/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(value)) {
+                            error = 'Please enter a valid email address';
+                        }
+                        break;
+                    case 'national_id':
+                        if (value && !/^[a-zA-Z0-9]{4,}$/.test(value)) {
+                            error = 'National ID must be at least 4 characters (letters and numbers allowed)';
+                        }
+                        break;
+                    case 'mobile_number':
+                        if (value && !/^\d+$/.test(value)) {
+                            error = 'Mobile number must contain only digits';
+                        }
+                        break;
+                    case 'date':
+                        if (value) {
+                            const selectedDate = new Date(value);
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            if (selectedDate < today) {
+                                error = 'Date must be today or later';
+                            }
+                        }
+                        break;
+                    case 'photo':
+                        if (value && !value.type.match('image/(jpeg|png)')) {
+                            error = 'Please upload a JPEG or PNG image';
+                        }
+                        break;
+                }
+                return error;
+            }
+
+            function validateForm() {
+                const newErrors = {};
+                const fieldsToValidate = ['firstName', 'lastName', 'date', 'allocatedTime', 'visitorEmail', 'national_id', 'mobile_number', 'photo'];
+                
+                fieldsToValidate.forEach(key => {
+                    const error = validateField(key, formData[key]);
+                    if (error) newErrors[key] = error;
+                });
+                
+                ['firstName', 'lastName', 'date', 'allocatedTime', 'visitorEmail'].forEach(key => {
+                    if (!formData[key]) newErrors[key] = `${key.replace('_', ' ')} is required`;
+                });
+                
+                errors = newErrors;
+                return Object.keys(newErrors).length === 0;
+            }
+
+            async function checkFormStatus() {
+                try {
+                    const response = await fetch(`http://192.168.3.75:3001/appointment/check-status?email=${formData.visitorEmail}&date=${formData.date}&time=${formData.allocatedTime}`);
+                    const data = await response.json();
+                    isFormCompleted = data.isFormCompleted;
+                    localStorage.setItem(`formCompleted_${formKey}`, isFormCompleted); // Cache status
+                    render();
+                } catch (error) {
+                    console.error('Error checking form status:', error);
+                    errorMessage = 'Failed to check form status. Please try again.';
+                    render();
+                }
+            }
+
+            async function checkNationalId(nationalId) {
+                try {
+                    const response = await fetch(`http://192.168.3.75:3001/appointment/check-national-id?national_id=${nationalId}`);
+                    const data = await response.json();
+                    if (data.exists) {
+                        errors.national_id = 'This National ID is already used for another appointment.';
+                    }
+                } catch (error) {
+                    console.error('Error checking national_id:', error);
+                    errors.national_id = 'Failed to validate National ID. Please try again.';
+                }
+            }
+
+            async function handleSubmit(e) {
+                e.preventDefault();
+                if (isFormCompleted) return;
+
+                if (!validateForm()) {
+                    errorMessage = 'Please fix all errors before submitting';
+                    render();
+                    return;
+                }
+
+                if (formData.national_id) {
+                    await checkNationalId(formData.national_id);
+                    if (errors.national_id) {
+                        errorMessage = 'This National ID is already used for another appointment.';
+                        render();
+                        return;
+                    }
+                }
+
+                loading = true;
+                successMessage = '';
+                errorMessage = '';
+                render();
+
+                const formDataToSend = new FormData();
+                const fieldMappings = {
+                    firstName: 'firstName',
+                    lastName: 'lastName',
+                    date: 'date',
+                    allocatedTime: 'time',
+                    visitorEmail: 'email',
+                    national_id: 'national_id',
+                    photo: 'photo',
+                    mobile_number: 'mobile_number',
+                    personal_details: 'personal_details',
+                    note: 'note'
+                };
+
+                Object.entries(fieldMappings).forEach(([clientKey, serverKey]) => {
+                    const value = formData[clientKey];
+                    if (value !== null && value !== '') {
+                        formDataToSend.append(serverKey, value);
+                    }
+                });
+
+                console.log('FormData being sent:');
+                for (let [key, value] of formDataToSend.entries()) {
+                    console.log(`${key}: ${typeof value === 'object' ? value.name || value : value}`);
+                }
+
+                try {
+                    const response = await fetch('http://192.168.3.75:3001/appointment/create', {
+                        method: 'POST',
+                        body: formDataToSend
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        successMessage = 'Your Appointment Scheduled Successfully';
+                        isFormCompleted = true;
+                        localStorage.setItem(`formCompleted_${formKey}`, 'true'); // Mark as completed
+                        formData = {
+                            firstName: '',
+                            lastName: '',
+                            date: '',
+                            allocatedTime: '',
+                            visitorEmail: '',
+                            national_id: '',
+                            photo: null,
+                            mobile_number: '',
+                            personal_details: '',
+                            note: ''
+                        };
+                        errors = {};
+                    } else {
+                        throw new Error(data.message || 'Failed to process request');
+                    }
+                } catch (error) {
+                    console.error('Error submitting appointment:', error);
+                    errorMessage = error.message || 'Failed to process request. Please try again.';
+                    if (error.message.includes('National ID')) {
+                        errors.national_id = error.message;
+                    }
+                } finally {
+                    loading = false;
+                    render();
+                }
+            }
+
+            function render() {
+                const container = document.getElementById('visitor-form');
+                if (isFormCompleted) {
+                    container.innerHTML = `
+                        <div class="success-container">
+                            <h1>${successMessage || 'Your Appointment is Already Set'}</h1>
+                            <p>Please check your email for the QR code and further instructions.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div class="form-container">
+                        <h1>Schedule an Appointment</h1>
+                        <form id="visitorForm">
+                            <div class="form-group">
+                                ${[
+                                    { label: 'First Name', name: 'firstName', disabled: true },
+                                    { label: 'Last Name', name: 'lastName', disabled: true },
+                                    { label: 'Date', name: 'date', type: 'date', disabled: true },
+                                    { label: 'Allocated Time', name: 'allocatedTime', type: 'time', disabled: true },
+                                    { label: 'Email', name: 'visitorEmail', type: 'email', disabled: true },
+                                    { label: 'National ID', name: 'national_id' },
+                                    { label: 'Mobile Number', name: 'mobile_number' },
+                                    { label: 'Personal Details', name: 'personal_details', type: 'textarea' },
+                                    { label: 'Note', name: 'note', type: 'textarea' }
+                                ].map(field => `
+                                    <div class="field-container">
+                                        <div class="field-row">
+                                            <label>${field.label}</label>
+                                            ${field.type === 'textarea' ? `
+                                                <textarea name="${field.name}" ${field.disabled ? 'disabled' : ''} class="${errors[field.name] ? 'error' : ''}">${formData[field.name]}</textarea>
+                                            ` : `
+                                                <input type="${field.type || 'text'}" name="${field.name}" value="${formData[field.name]}" ${field.disabled ? 'disabled' : ''} ${!field.disabled && field.name !== 'personal_details' && field.name !== 'note' ? 'required' : ''} class="${errors[field.name] ? 'error' : ''}">
+                                            `}
+                                        </div>
+                                        ${errors[field.name] ? `<span class="error-message">${errors[field.name]}</span>` : ''}
+                                    </div>
+                                `).join('')}
+                                <div class="field-container">
+                                    <div class="field-row">
+                                        <label>Photo</label>
+                                        <div style="flex: 1">
+                                            <button type="button" class="photo-button ${errors.photo ? 'error' : ''}" id="photoUpload">Choose File</button>
+                                            ${showPhotoOptions ? `
+                                                <div class="photo-options">
+                                                    <button type="button" class="gallery-btn" id="galleryBtn">Gallery</button>
+                                                    <button type="button" class="camera-btn" id="cameraBtn">Camera</button>
+                                                </div>
+                                            ` : ''}
+                                            <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                                            <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;">
+                                        </div>
+                                    </div>
+                                    ${errors.photo ? `<span class="error-message">${errors.photo}</span>` : ''}
+                                    ${formData.photo ? `<span style="font-size: 0.9rem; margin-left: 40%; color: #666;">Selected: ${formData.photo.name}</span>` : ''}
+                                </div>
+                            </div>
+                            <button type="submit" class="submit-btn" ${loading ? 'disabled' : ''}>${loading ? 'Processing...' : 'Submit'}</button>
+                        </form>
+                        ${errorMessage ? `<p style="text-align: center; margin-top: 1.5rem; color: red; font-weight: bold;">${errorMessage}</p>` : ''}
+                    </div>
+                `;
+
+                document.getElementById('visitorForm').addEventListener('submit', handleSubmit);
+                document.getElementById('photoUpload').addEventListener('click', () => {
+                    showPhotoOptions = !showPhotoOptions;
+                    render();
+                });
+                document.getElementById('galleryBtn')?.addEventListener('click', () => document.getElementById('fileInput').click());
+                document.getElementById('cameraBtn')?.addEventListener('click', () => document.getElementById('cameraInput').click());
+                document.getElementById('fileInput').addEventListener('change', e => {
+                    formData.photo = e.target.files[0];
+                    errors.photo = validateField('photo', formData.photo);
+                    showPhotoOptions = false;
+                    render();
+                });
+                document.getElementById('cameraInput').addEventListener('change', e => {
+                    formData.photo = e.target.files[0];
+                    errors.photo = validateField('photo', formData.photo);
+                    showPhotoOptions = false;
+                    render();
+                });
+                document.querySelectorAll('input, textarea').forEach(input => {
+                    input.addEventListener('input', async e => {
+                        const { name, value } = e.target;
+                        formData[name] = value;
+                        errors[name] = validateField(name, value);
+                        if (name === 'national_id' && value && !errors[name]) {
+                            await checkNationalId(value);
+                        }
+                        updateFormState(e.target);
+                    });
+                });
+            }
+
+            function updateFormState(activeInput) {
+                const container = document.getElementById('visitor-form');
+                if (isFormCompleted) {
+                    render();
+                    return;
+                }
+
+                if (activeInput) {
+                    const fieldContainer = activeInput.closest('.field-container');
+                    if (fieldContainer) {
+                        const errorSpan = fieldContainer.querySelector('.error-message');
+                        if (errorSpan) {
+                            errorSpan.textContent = errors[activeInput.name] || '';
+                        } else if (errors[activeInput.name]) {
+                            fieldContainer.insertAdjacentHTML('beforeend', `<span class="error-message">${errors[activeInput.name]}</span>`);
+                        }
+                        activeInput.classList.toggle('error', !!errors[activeInput.name]);
+                    }
+                }
+
+                const photoContainer = container.querySelector('.field-container:last-child');
+                if (photoContainer) {
+                    const photoButton = photoContainer.querySelector('#photoUpload');
+                    if (photoButton) photoButton.classList.toggle('error', !!errors.photo);
+                    const photoOptions = photoContainer.querySelector('.photo-options');
+                    if (photoOptions) photoOptions.style.display = showPhotoOptions ? 'block' : 'none';
+                    const photoStatus = photoContainer.querySelector('span[style*="font-size: 0.9rem"]');
+                    if (photoStatus) photoStatus.textContent = formData.photo ? `Selected: ${formData.photo.name}` : '';
+                }
+
+                const submitBtn = container.querySelector('.submit-btn');
+                if (submitBtn) {
+                    submitBtn.disabled = loading;
+                    submitBtn.textContent = loading ? 'Processing...' : 'Submit';
+                }
+
+                let errorP = container.querySelector('p[style*="color: red"]');
+                if (errorMessage) {
+                    if (errorP) {
+                        errorP.textContent = errorMessage;
+                    } else {
+                        container.querySelector('form').insertAdjacentHTML('afterend', `<p style="text-align: center; margin-top: 1.5rem; color: red; font-weight: bold;">${errorMessage}</p>`);
+                    }
+                } else if (errorP) {
+                    errorP.remove();
+                }
+
+                if (activeInput) activeInput.focus();
+            }
+
+            // Render immediately based on local storage, then verify with server if not completed
+            render();
+            if (!isFormCompleted) {
+                checkFormStatus();
+            }
+        });
+    </script>
+</body>
+</html>
