@@ -990,7 +990,7 @@ button:disabled {
                                 >
                                     <line x1="5" y1="12" x2="19" y2="12"></line>
                                 </svg>
-                                <span>USER INTERFACE</span>
+                                <span>ADMINISTRATOR</span>
                             </h2>
 
                             <li class="menu nav-item">
@@ -3209,7 +3209,11 @@ button:disabled {
                     console.log('Sending Data:', formattedData);
             
                     try {
+HEAD
                         const response = await axios.post('http://192.168.3.77:3001/visitors', formattedData, {
+
+                        const response = await axios.post('http://192.168.3.77:3001/visitors', formattedData, {
+
                             headers: { 'Content-Type': 'application/json' }
                         });
                         console.log('Response:', response.data);
