@@ -299,9 +299,13 @@
     <div class="panel">
         <div class="panel-header">
             <h2>User Management Stack</h2>
-            <button class="btn btn-primary" onclick="openAddUserModal()">Add User</button>
+            <div>
+                <button class="btn btn-primary" onclick="fetchAllUsers()">Show All Users</button>
+                <button class="btn btn-primary" onclick="fetchUsers()">Paginated View</button>
+                <button class="btn btn-primary" onclick="openAddUserModal()">Add User</button>
+            </div>
         </div>
-        <div class="panel-controls">
+        <div class="panel-controls" id="paginationControls">
             <div class="entries-per-page">
                 <select id="entriesPerPage" onchange="fetchUsers()">
                     <option value="10">10</option>
@@ -338,7 +342,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5>Add User</h5>
-                <span class="close-btn" onclick="closeAddUserModal()">&times;</span>
+                <span class="close-btn" onclick="closeAddUserModal()">×</span>
             </div>
             <div class="form-container">
                 <form id="addUserForm" autocomplete="off">
@@ -405,6 +409,7 @@
     <script>
         let currentPage = 1;
         let entriesPerPage = 10;
+        let isPaginatedView = false; // Track the current view mode
 
         // Modal Functions
         function openAddUserModal() {
@@ -418,13 +423,50 @@
             $('.form-group').removeClass('has-error has-success');
         }
 
-        // Fetch users from the backend
+        // Fetch all users without pagination
+        async function fetchAllUsers() {
+            try {
+                const response = await fetch(`http://192.168.3.75:3001/users/all`);
+                const data = await response.json();
+
+                const tbody = document.getElementById('userTableBody');
+                tbody.innerHTML = '';
+
+                data.users.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${user.firstName} ${user.lastName}</td>
+                        <td>${user.userName}</td>
+                        <td>
+                            <label class="toggle-switch">
+                                <input type="checkbox" ${user.isActive ? 'checked' : ''} onchange="toggleUserStatus(${user.id}, this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                        </td>
+                        <td class="action-icons">
+                            <i class="fas fa-edit" onclick="editUser(${user.id})"></i>
+                            <i class="fas fa-trash" onclick="deleteUser(${user.id})"></i>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                document.getElementById('panelFooter').textContent = `Showing 1 to ${data.users.length} of ${data.users.length} entries`;
+                document.getElementById('paginationControls').style.display = 'none'; // Hide pagination controls
+                isPaginatedView = false;
+            } catch (error) {
+                console.error('Error fetching all users:', error);
+                showMessage('Error fetching all users', 'error');
+            }
+        }
+
+        // Fetch users with pagination and search
         async function fetchUsers() {
             entriesPerPage = document.getElementById('entriesPerPage').value;
             const searchQuery = document.getElementById('searchInput').value;
 
             try {
-                const response = await fetch(`http://localhost:3000/users?page=${currentPage}&limit=${entriesPerPage}&search=${searchQuery}`);
+                const response = await fetch(`http://192.168.3.75:3001/users?page=${currentPage}&limit=${entriesPerPage}&search=${searchQuery}`);
                 const data = await response.json();
 
                 const tbody = document.getElementById('userTableBody');
@@ -450,22 +492,37 @@
                 });
 
                 document.getElementById('panelFooter').textContent = `Showing ${data.start} to ${data.end} of ${data.total} entries`;
+                document.getElementById('paginationControls').style.display = 'flex'; // Show pagination controls
+                isPaginatedView = true;
             } catch (error) {
                 console.error('Error fetching users:', error);
+                showMessage('Error fetching users', 'error');
             }
         }
 
         // Toggle user active status
         async function toggleUserStatus(userId, isActive) {
             try {
-                await fetch(`http://localhost:3000/users/${userId}/toggle`, {
+                await fetch(`http://192.168.3.75:3001/users/${userId}/toggle`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ isActive }),
                 });
+                // Refresh the table based on the current view
+                if (isPaginatedView) {
+                    fetchUsers();
+                } else {
+                    fetchAllUsers();
+                }
             } catch (error) {
                 console.error('Error toggling user status:', error);
-                fetchUsers(); // Revert on error
+                showMessage('Error toggling user status', 'error');
+                // Revert on error
+                if (isPaginatedView) {
+                    fetchUsers();
+                } else {
+                    fetchAllUsers();
+                }
             }
         }
 
@@ -478,12 +535,18 @@
         async function deleteUser(userId) {
             if (confirm('Are you sure you want to delete this user?')) {
                 try {
-                    await fetch(`http://localhost:3000/users/${userId}`, {
+                    await fetch(`http://192.168.3.75:3001/users/${userId}`, {
                         method: 'DELETE',
                     });
-                    fetchUsers();
+                    // Refresh the table based on the current view
+                    if (isPaginatedView) {
+                        fetchUsers();
+                    } else {
+                        fetchAllUsers();
+                    }
                 } catch (error) {
                     console.error('Error deleting user:', error);
+                    showMessage('Error deleting user', 'error');
                 }
             }
         }
@@ -541,7 +604,7 @@
                     notes: $("textarea[name='notes']").val() || null,
                 };
 
-                fetch('http://localhost:3000/users', {
+                fetch('http://192.168.3.75:3001/users', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData),
@@ -553,7 +616,12 @@
                 .then(data => {
                     showMessage(data.message, 'success');
                     closeAddUserModal();
-                    fetchUsers(); // Refresh the table
+                    // Refresh the table based on the current view
+                    if (isPaginatedView) {
+                        fetchUsers();
+                    } else {
+                        fetchAllUsers();
+                    }
                 })
                 .catch(error => showMessage(error.message || 'Error creating user', 'error'));
             });
@@ -585,8 +653,8 @@
             setTimeout(() => messageBox.remove(), 3000);
         }
 
-        // Initial fetch
-        fetchUsers();
+        // Initial fetch - Show all users by default
+        fetchAllUsers();
     </script>
 </body>
 </html>
