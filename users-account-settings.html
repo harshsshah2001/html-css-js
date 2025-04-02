@@ -37,6 +37,46 @@
             font-size: 0.9rem;
             margin-top: 5px;
         }
+        /* Toggle Switch Styling */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #3b82f6; /* Blue color like in the image */
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -103,7 +143,7 @@
     </div>
 
     <script>
-        const API_BASE_URL = 'http://192.168.3.77:3001/userroles';
+        const API_BASE_URL = 'http://192.168.3.74:3001/userroles';
         let isEditMode = false;
         let currentRoleId = null;
 
@@ -122,7 +162,12 @@
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td class="px-6 py-4 text-sm text-gray-900">${role.userRoleName}</td>
-                        <td class="px-6 py-4 text-sm text-gray-900">${role.active ? 'Yes' : 'No'}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            <label class="switch">
+                                <input type="checkbox" ${role.active ? 'checked' : ''} onchange="toggleActive(${role.id}, this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                        </td>
                         <td class="px-6 py-4 text-sm">
                             <button onclick="editRole(${role.id})" class="text-blue-500 hover:text-blue-700 mr-4">
                                 <i class="fas fa-edit"></i>
@@ -137,6 +182,53 @@
             } catch (error) {
                 console.error('Error loading roles:', error);
                 alert(`Error: ${error.message}`);
+            }
+        }
+
+        // Function to toggle the active status of a role
+        async function toggleActive(roleId, isActive) {
+            try {
+                // Fetch the current role data to get UserRoleName and permissions
+                const roleResponse = await fetch(`${API_BASE_URL}/${roleId}`, { method: 'GET' });
+                if (!roleResponse.ok) {
+                    const error = await roleResponse.json();
+                    throw new Error(error.message || 'Failed to fetch role');
+                }
+                const role = await roleResponse.json();
+
+                // Format the permissions to match the expected structure
+                const formattedPermissions = role.permissions.map(perm => ({
+                    id: perm.permissionId,
+                    IsRead: perm.isRead,
+                    IsCreate: perm.isCreate,
+                    IsUpdate: perm.isUpdate,
+                    IsDelete: perm.isDelete,
+                    IsExecute: perm.isExecute,
+                }));
+
+                // Prepare the payload with UserRoleName, Active, and permissions
+                const payload = {
+                    UserRoleName: role.userRoleName,
+                    Active: isActive,
+                    permissions: formattedPermissions,
+                };
+
+                // Send the PUT request to update the role
+                const response = await fetch(`${API_BASE_URL}/${roleId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to update active status');
+                }
+                loadRoles(); // Refresh the table after updating
+            } catch (error) {
+                console.error('Error updating active status:', error);
+                alert(`Error: ${error.message}`);
+                loadRoles(); // Refresh the table to revert the toggle if the update fails
             }
         }
 
@@ -252,34 +344,62 @@
         }
 
         // Form submission
-        document.getElementById('roleForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const roleName = document.getElementById('roleName').value;
-            const permissions = collectPermissions();
+        // Form submission
+document.getElementById('roleForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const roleName = document.getElementById('roleName').value;
+    const permissions = collectPermissions();
 
-            const data = isEditMode 
-                ? { UserRoleName: roleName, permissions }
-                : { UserRoleName: roleName, permissions };
-            const url = isEditMode ? `${API_BASE_URL}/${currentRoleId}` : `${API_BASE_URL}`;
-            const method = isEditMode ? 'PUT' : 'POST';
-
-            try {
-                const response = await fetch(url, {
-                    method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data),
-                });
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.message || `Failed to ${isEditMode ? 'update' : 'create'} role`);
-                }
-                closeModal();
-                loadRoles();
-            } catch (error) {
-                console.error(`Error ${isEditMode ? 'updating' : 'creating'} role:`, error);
-                document.getElementById('formError').textContent = error.message;
+    let data;
+    if (isEditMode) {
+        // Fetch the current role to get its active status
+        try {
+            const response = await fetch(`${API_BASE_URL}/${currentRoleId}`, { method: 'GET' });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to fetch role');
             }
+            const role = await response.json();
+            // Include UserRoleName, Active, and permissions in the payload
+            data = {
+                UserRoleName: roleName,
+                Active: role.active, // Use the current active status
+                permissions,
+            };
+        } catch (error) {
+            console.error('Error fetching role for active status:', error);
+            document.getElementById('formError').textContent = error.message;
+            return;
+        }
+    } else {
+        // For creating a new role, set Active to true by default
+        data = {
+            UserRoleName: roleName,
+            Active: true,
+            permissions,
+        };
+    }
+
+    const url = isEditMode ? `${API_BASE_URL}/${currentRoleId}` : `${API_BASE_URL}`;
+    const method = isEditMode ? 'PUT' : 'POST';
+
+    try {
+        const response = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
         });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || `Failed to ${isEditMode ? 'update' : 'create'} role`);
+        }
+        closeModal();
+        loadRoles();
+    } catch (error) {
+        console.error(`Error ${isEditMode ? 'updating' : 'creating'} role:`, error);
+        document.getElementById('formError').textContent = error.message;
+    }
+});
 
         // Delete role
         async function deleteRole(id) {
