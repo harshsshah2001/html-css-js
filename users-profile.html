@@ -55,14 +55,14 @@
             max-width: 1200px;
             margin: 0 auto;
         }
-
+ 
         .panel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
         }
-
+ 
         .panel-header h2 {
             font-size: 2rem;
             font-weight: 600;
@@ -104,11 +104,11 @@
             --tw-shadow-color: #4361ee99;
             --tw-shadow: var(--tw-shadow-colored)
         }
-
+ 
         .btn-primary:hover {
             background-color: #4361ee;
         }
-
+ 
         .btn-outline-primary {
             --tw-border-opacity: 1;
             border-color: rgb(67 97 238/var(--tw-border-opacity));
@@ -146,7 +146,7 @@
             text-align: left;
             border-bottom: 1px solid #eee;
         }
-
+ 
         th {
             background-color: #f8f9fa;
             color: #666;
@@ -169,7 +169,7 @@
             align-items: center;
             padding: 20px;
         }
-
+ 
         .modal-content {
             background: #fff;
             border-radius: 12px;
@@ -193,19 +193,19 @@
             padding-bottom: 10px;
             margin-bottom: 20px;
         }
-
+ 
         .modal-header h5 {
             font-size: 1.5rem;
             font-weight: 600;
         }
-
+ 
         .close-btn {
             font-size: 2rem;
             color: #666;
             cursor: pointer;
             transition: color 0.3s ease;
         }
-
+ 
         .close-btn:hover {
             color: #333;
         }
@@ -216,30 +216,30 @@
         .form-container {
             margin-top: 10px;
         }
-
+ 
         .form-row {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
         }
-
+ 
         .form-column {
             flex: 1;
             min-width: 300px;
         }
-
+ 
         .form-group {
             width: 100%;
             margin-bottom: 15px;
         }
-
+ 
         .form-group label {
             font-weight: 500;
             display: block;
             margin-bottom: 5px;
             color: #333;
         }
-
+ 
         .form-group input,
         .form-group select,
         .form-group textarea {
@@ -2991,22 +2991,22 @@
         let entriesPerPage = 10;
         let isPaginatedView = false; // Track the current view mode
         let currentEditUserId = null; // Global variable to store editing user ID
-
+ 
         // Modal Functions
         function openAddUserModal() {
             document.getElementById('addUserModal').style.display = 'flex';
         }
-
+ 
         function closeAddUserModal() {
             document.getElementById('addUserModal').style.display = 'none';
             document.getElementById('addUserForm').reset();
             $('.form-group').removeClass('has-error has-success');
         }
-
+ 
         function openEditUserModal() {
             document.getElementById('editUserModal').style.display = 'flex';
         }
-
+ 
         function closeEditUserModal() {
             document.getElementById('editUserModal').style.display = 'none';
             document.getElementById('editUserForm').reset();
@@ -3036,10 +3036,10 @@
                 const response = await fetch(`http://192.168.3.73:3001/users/all`);
 
                 const data = await response.json();
-
+ 
                 const tbody = document.getElementById('userTableBody');
                 tbody.innerHTML = '';
-
+ 
                 data.users.forEach(user => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
@@ -3058,7 +3058,7 @@
                         `;
                     tbody.appendChild(row);
                 });
-
+ 
                 document.getElementById('panelFooter').textContent = `Showing 1 to ${data.users.length} of ${data.users.length} entries`;
                 document.getElementById('panelFooter').textContent = `Showing 1 to ${data.users.length} of ${data.users.length} entries`;
                 document.getElementById('paginationControls').style.display = 'none';
@@ -3068,19 +3068,19 @@
                 showMessage('Error fetching all users', 'error');
             }
         }
-
+ 
         // Fetch users with pagination and search
         async function fetchUsers() {
             entriesPerPage = document.getElementById('entriesPerPage').value;
             const searchQuery = document.getElementById('searchInput').value;
-
+ 
             try {
                 const response = await fetch(`http://192.168.3.73:3001/users?page=${currentPage}&limit=${entriesPerPage}&search=${searchQuery}`);
                 const data = await response.json();
-
+ 
                 const tbody = document.getElementById('userTableBody');
                 tbody.innerHTML = '';
-
+ 
                 data.users.forEach(user => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
@@ -3098,7 +3098,7 @@
                         `;
                     tbody.appendChild(row);
                 });
-
+ 
                 document.getElementById('panelFooter').textContent = `Showing ${data.start} to ${data.end} of ${data.total} entries`;
                 document.getElementById('paginationControls').style.display = 'flex';
                 isPaginatedView = true;
@@ -3107,7 +3107,7 @@
                 showMessage('Error fetching users', 'error');
             }
         }
-
+ 
         // Toggle user active status
         async function toggleUserStatus(userId) {
             try {
@@ -3144,7 +3144,7 @@
                 }
             }
         }
-
+ 
         // Edit user
         async function editUser(userId) {
             try {
@@ -3155,7 +3155,7 @@
                 const response = await fetch(`http://192.168.3.73:3001/users/${userId}`);
                 if (!response.ok) throw new Error('Failed to fetch user data');
                 const user = await response.json();
-
+ 
                 // Populate form fields
                 document.getElementById('editFirstName').value = user.firstName || '';
                 document.getElementById('editLastName').value = user.lastName || '';
@@ -3165,30 +3165,30 @@
                 document.getElementById('editAddress').value = user.address || '';
                 document.getElementById('editUserRoleId').value = user.userRoleId || '';
                 document.getElementById('editNotes').value = user.notes || '';
-
+ 
                 // Update NiceSelect after changing the value
                 if (jQuery.fn.niceSelect) {
                     $("#editUserRoleId").val(user.userRoleId || '').niceSelect('update');
                 } else {
                     console.error('NiceSelect is not loaded');
                 }
-
+ 
                 // Store userId in hidden input, dataset, and global variable
                 document.getElementById('editUserId').value = userId;
                 document.getElementById('editUserForm').dataset.userId = userId;
                 currentEditUserId = userId;
-
+ 
                 console.log('Stored userId - Hidden:', document.getElementById('editUserId').value);
                 console.log('Stored userId - Dataset:', document.getElementById('editUserForm').dataset.userId);
                 console.log('Stored userId - Global:', currentEditUserId);
-
+ 
                 openEditUserModal();
             } catch (error) {
                 console.error('Error fetching user:', error);
                 showMessage('Error fetching user data', 'error');
             }
         }
-
+ 
         // Delete user
         async function deleteUser(userId) {
             if (confirm('Are you sure you want to delete this user?')) {
@@ -3209,7 +3209,7 @@
                 }
             }
         }
-
+ 
         // Form Submission
         $(document).ready(function () {
             // Initialize NiceSelect on page load with a check
@@ -3219,13 +3219,13 @@
             } else {
                 console.error('NiceSelect library failed to load');
             }
-
+ 
             $("#addUserForm").submit(function (event) {
                 event.preventDefault();
-
+ 
                 const password = $("#password").val();
                 const confirmPassword = $("#ConfirmPassword").val();
-
+ 
                 if (!$("#FirstName").val()) {
                     $("#FirstNameField").addClass("has-error");
                     showMessage("First Name is required", "error");
@@ -3257,7 +3257,7 @@
                     showMessage("User Role is required", "error");
                     return;
                 }
-
+ 
                 const formData = {
                     firstName: $("#FirstName").val(),
                     lastName: $("#LastName").val(),
@@ -3292,10 +3292,10 @@
                     })
                     .catch(error => showMessage(error.message || 'Error creating user', 'error'));
             });
-
+ 
             $("#editUserForm").submit(async function (event) {
                 event.preventDefault();
-
+ 
                 // Prioritize hidden input, then dataset, then global variable
                 const userId = Number(document.getElementById('editUserId').value) ||
                     Number(this.dataset.userId) ||
@@ -3305,15 +3305,15 @@
                 console.log('Hidden userId:', document.getElementById('editUserId').value);
                 console.log('Dataset userId:', this.dataset.userId);
                 console.log('Global userId:', currentEditUserId);
-
+ 
                 if (isNaN(userId) || !userId) {
                     showMessage('Invalid user ID', 'error');
                     return;
                 }
-
+ 
                 const password = $("#editPassword").val();
                 const confirmPassword = $("#editConfirmPassword").val();
-
+ 
                 if (!$("#editFirstName").val()) {
                     $("#editFirstNameField").addClass("has-error");
                     showMessage("First Name is required", "error");
@@ -3340,7 +3340,7 @@
                     showMessage("User Role is required", "error");
                     return;
                 }
-
+ 
                 const formData = {
                     firstName: $("#editFirstName").val(),
                     lastName: $("#editLastName").val(),
@@ -3351,24 +3351,24 @@
                     userRoleId: parseInt($("#editUserRoleId").val()),
                     notes: $("#editNotes").val() || null,
                 };
-
+ 
                 if (password) {
                     formData.password = password;
                 }
-
+ 
                 try {
                     const response = await fetch(`http://192.168.3.73:3001/users/${userId}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(formData),
                     });
-
+ 
                     if (!response.ok) {
                         const errorData = await response.json();
                         throw new Error(errorData.message || 'Failed to update user');
                     }
                     const data = await response.json();
-
+ 
                     showMessage(data.message, 'success');
                     closeEditUserModal();
                     currentEditUserId = null; // Reset after success
@@ -3382,24 +3382,24 @@
                     showMessage(error.message || 'Error updating user', 'error');
                 }
             });
-
+ 
             $("#FirstName, #LastName, #email, #password, #ConfirmPassword, #UserRoleId").on("input change", function () {
                 $(this).closest(".form-group").removeClass("has-error").addClass("has-success");
             });
-
+ 
             $("#editFirstName, #editLastName, #editUserName, #editPassword, #editConfirmPassword, #editUserRoleId").on("input change", function () {
                 $(this).closest(".form-group").removeClass("has-error").addClass("has-success");
             });
-
+ 
             $("#email").on("input", function () {
                 this.value = this.value.replace(/\s+/g, "").toLowerCase();
             });
-
+ 
             $("#editUserName").on("input", function () {
                 this.value = this.value.replace(/\s+/g, "").toLowerCase();
             });
         });
-
+ 
         // Message Display Function
         // function showMessage(message, type) {
         //     let messageBox = document.createElement("div");
@@ -3638,3 +3638,5 @@
 </body>
 
 </html>
+ 
+ 
