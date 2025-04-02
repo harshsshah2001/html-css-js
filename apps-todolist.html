@@ -2586,11 +2586,27 @@
     <script defer src="assets/js/alpine.min.js"></script>
 
     <script>
+        // Define the showMessage function globally so it can be used in the form submission logic
+        const showMessage = (msg = 'Example notification text.', position = 'top', showCloseButton = true, closeButtonHtml = '', duration = 3000) => {
+            const toast = window.Swal.mixin({
+                toast: true,
+                position: position || 'top',
+                showConfirmButton: false,
+                timer: duration,
+                showCloseButton: showCloseButton,
+            });
+            toast.fire({
+                icon: 'success', // Add success icon to match the style of the previous toast
+                title: msg,
+                padding: '10px 20px',
+            });
+        };
+    
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('personalForm');
             const message = document.getElementById('message');
             let loading = false;
-
+    
             const formData = {
                 firstName: '',
                 lastName: '',
@@ -2600,29 +2616,29 @@
                 allocationTime: '',
                 date: ''
             };
-
+    
             const parseQueryParams = () => {
                 const hash = window.location.hash;
                 const queryString = hash.split('?')[1];
                 if (!queryString) return;
-
+    
                 const params = new URLSearchParams(queryString);
                 formData.email = decodeURIComponent(params.get('email') || '');
                 formData.allocationTime = decodeURIComponent(params.get('time') || '');
                 formData.date = decodeURIComponent(params.get('date') || '');
-
+    
                 updateInputs();
             };
-
+    
             const updateInputs = () => {
                 Object.keys(formData).forEach(key => {
                     const input = document.getElementById(key);
                     if (input) input.value = formData[key];
                 });
             };
-
+    
             parseQueryParams();
-
+    
             const validateField = (name, value) => {
                 let error = '';
                 switch (name) {
@@ -2677,7 +2693,7 @@
                 }
                 return error;
             };
-
+    
             const handleChange = (e) => {
                 const { name, value } = e.target;
                 formData[name] = value;
@@ -2704,7 +2720,7 @@
                     }
                 }
             };
-
+    
             const validateForm = () => {
                 const errors = {};
                 Object.keys(formData).forEach(key => {
@@ -2717,9 +2733,9 @@
                 });
                 return Object.keys(errors).length === 0;
             };
-
+    
             form.addEventListener('input', handleChange);
-
+    
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!validateForm()) {
@@ -2733,23 +2749,23 @@
                 submitBtn.textContent = 'Sending...';
                 submitBtn.disabled = true;
                 message.textContent = '';
-
+    
                 const formattedDate = formData.date ? formData.date.split('-').reverse().join('-') : '';
                 const formattedData = {
                     ...formData,
                     phoneNumber: formData.phone,
                     date: formattedDate
                 };
-
+    
                 console.log('Sending Data:', formattedData);
-
+    
                 try {
                     const response = await axios.post('http://192.168.3.75:3001/visitors', formattedData, {
                         headers: { 'Content-Type': 'application/json' }
                     });
                     console.log('Response:', response.data);
-                    message.textContent = 'Visitor data successfully submitted!';
-                    message.style.color = 'green';
+                    // Show toast message instead of updating the message element
+                    showMessage('Visitor data successfully sent to email');
                     Object.keys(formData).forEach(key => {
                         formData[key] = '';
                         const input = document.getElementById(key);
