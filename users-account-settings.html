@@ -4,373 +4,284 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Role Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* [Keeping all your existing CSS unchanged] */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
-
-        body {
-            line-height: 1.6;
-            padding: 20px;
-            background: #f4f7fa;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .content-header {
-            margin-bottom: 20px;
-        }
-
-        .flex {
-            display: flex;
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
             align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
         }
-
-        h5 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border-radius: 20px;
-            text-decoration: none;
-            color: white;
-            background: #007bff;
-            border: none;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
-        .btn:hover {
-            background: #0056b3;
-        }
-
-        .panel {
+        .modal-content {
             background: white;
+            border-radius: 8px;
             padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
         }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-
-        input[type="text"],
-        select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 0.9rem;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-        }
-
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border: 1px solid #ddd;
-        }
-
-        th {
-            background: #f8f9fa;
-            font-weight: 600;
-        }
-
-        .jsgrid-align-center {
-            text-align: center;
-        }
-
-        input[type="checkbox"] {
-            margin: 0 auto;
-            display: block;
-        }
-
-        .card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .card-header {
-            padding: 15px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .card-body {
-            padding: 15px;
-        }
-
-        .alert-danger {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 10px;
-            border-radius: 4px;
-            margin-top: 10px;
-        }
-
-        .action-icons {
-            display: flex;
-            gap: 15px;
-        }
-
-        .action-icons span {
+        .close-btn {
+            font-size: 1.5rem;
             cursor: pointer;
-            color: #666;
+        }
+        .error-message {
+            color: #dc3545;
+            font-size: 0.9rem;
+            margin-top: 5px;
         }
 
-        .action-icons span:hover {
-            color: #007bff;
+        /* Toggle Switch Styling */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
         }
-
-        @media (max-width: 768px) {
-            .flex {
-                flex-direction: column;
-                gap: 10px;
-            }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #3b82f6; /* Tailwind's blue-500 */
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <!-- User Role Listing -->
-        <section class="content-header" id="userrole-list">
-            <div class="flex">
-                <h5>User Role Management Stack</h5>
-                <button class="btn" onclick="showSection('userrole-create')">Add User Role</button>
-            </div>
-            <div class="panel">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>User Role</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="userrole-table-body">
-                        <!-- Dynamically populated -->
-                    </tbody>
-                </table>
-            </div>
-        </section>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-6">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">User Role Management</h1>
+            <button id="addRoleBtn" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                Add User Role
+            </button>
+        </div>
 
-        <!-- Create User Role -->
-        <section class="content-header" id="userrole-create" style="display: none;">
-            <div class="flex">
-                <h5>Add User Role</h5>
-                <button class="btn" onclick="showSection('userrole-list')">Back</button>
-            </div>
-            <form id="create-userrole-form">
-                <div class="panel">
-                    <div class="form-group">
-                        <label for="create-UserRoleName">User Role</label>
-                        <input type="text" id="create-UserRoleName" name="UserRoleName" placeholder="Enter User Role Name" required>
-                    </div>
+        <!-- Roles Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Active</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="rolesTableBody" class="divide-y divide-gray-200">
+                    <!-- Dynamically populated -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Create/Edit Role Modal -->
+        <div id="roleModal" class="modal">
+            <div class="modal-content">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 id="modalTitle" class="text-xl font-semibold text-gray-800"></h2>
+                    <span class="close-btn text-gray-500 hover:text-gray-800" onclick="closeModal()">×</span>
                 </div>
-                <div class="panel">
-                    <div class="card-header">
-                        <h3>Permissions</h3>
+                <form id="roleForm">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700">Role Name</label>
+                        <input type="text" id="roleName" name="UserRoleName" class="mt-1 block w-full border border-gray-300 rounded-md p-2" required>
                     </div>
-                    <div class="card-body">
-                        <table>
-                            <thead>
+                    <div class="mb-4" id="activeField">
+                        <label class="flex items-center">
+                            <span class="text-sm font-medium text-gray-700 mr-2">Active</span>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="active" name="Active">
+                                <span class="slider"></span>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="mb-4">
+                        <h3 class="text-lg font-medium text-gray-800">Permissions</h3>
+                        <table class="min-w-full mt-2">
+                            <thead class="bg-gray-50">
                                 <tr>
-                                    <th>Permission</th>
-                                    <th>Read</th>
-                                    <th>Create</th>
-                                    <th>Update</th>
-                                    <th>Delete</th>
-                                    <th>Active</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Permission</th>
+                                    <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">Read</th>
+                                    <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">Create</th>
+                                    <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">Update</th>
+                                    <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">Delete</th>
+                                    <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">Execute</th>
                                 </tr>
                             </thead>
-                            <tbody id="create-permissions-table">
-                                <!-- Permissions will be populated by JS -->
+                            <tbody id="permissionsTable" class="divide-y divide-gray-200">
+                                <!-- Dynamically populated -->
                             </tbody>
                         </table>
                     </div>
-                </div>
-                <div class="form-group text-center">
-                    <button type="submit" class="btn">Submit</button>
-                </div>
-            </form>
-        </section>
-
-        <!-- Edit User Role -->
-        <section class="content-header" id="userrole-edit" style="display: none;">
-            <div class="flex">
-                <h5>Edit User Role</h5>
-                <button class="btn" onclick="showSection('userrole-list')">Back</button>
+                    <div id="formError" class="error-message"></div>
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Save</button>
+                </form>
             </div>
-            <form id="edit-userrole-form">
-                <input type="hidden" id="edit-userrole-id" name="id">
-                <div class="panel">
-                    <div class="form-group">
-                        <label for="edit-UserRoleName">User Role Name</label>
-                        <input type="text" id="edit-UserRoleName" name="UserRoleName" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="checkbox" id="edit-Active" name="Active">
-                        <label for="edit-Active">Active</label>
-                    </div>
-                </div>
-                <div class="panel">
-                    <div class="card-header">
-                        <h3>Permissions</h3>
-                    </div>
-                    <div class="card-body">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Permission</th>
-                                    <th>Read</th>
-                                    <th>Create</th>
-                                    <th>Update</th>
-                                    <th>Delete</th>
-                                    <th>Active</th>
-                                </tr>
-                            </thead>
-                            <tbody id="edit-permissions-table">
-                                <!-- Permissions will be populated by JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="form-group text-center">
-                    <button type="submit" class="btn">Submit</button>
-                </div>
-            </form>
-        </section>
+        </div>
     </div>
 
     <script>
-        const API_BASE_URL = 'http://localhost:3001/userroles';
+        const API_BASE_URL = 'http://192.168.3.77:3001/userroles';
+        let isEditMode = false;
+        let currentRoleId = null;
 
-        // Function to show specific section
-        function showSection(sectionId) {
-            document.querySelectorAll('section').forEach(section => {
-                section.style.display = 'none';
-            });
-            document.getElementById(sectionId).style.display = 'block';
-        }
-
-        // Fetch and populate user roles list
-        async function loadUserRoles() {
+        // Fetch and display all roles
+        async function loadRoles() {
             try {
-                const response = await fetch(`${API_BASE_URL}`);
-                const userRoles = await response.json();
-                const tbody = document.getElementById('userrole-table-body');
+                const response = await fetch(`${API_BASE_URL}`, { method: 'GET' });
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to fetch roles');
+                }
+                const roles = await response.json();
+                const tbody = document.getElementById('rolesTableBody');
                 tbody.innerHTML = '';
-                userRoles.forEach(role => {
+                roles.forEach(role => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td>${role.userRoleName}</td>
-                        <td class="action-icons">
-                            <span onclick="editUserRole(${role.id})">Edit</span>
-                            <span onclick="deleteUserRole(${role.id})">Delete</span>
+                        <td class="px-6 py-4 text-sm text-gray-900">${role.userRoleName}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${role.active ? 'Yes' : 'No'}</td>
+                        <td class="px-6 py-4 text-sm">
+                            <button onclick="editRole(${role.id})" class="text-blue-500 hover:text-blue-700 mr-4">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteRole(${role.id})" class="text-red-500 hover:text-red-700">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </td>
                     `;
                     tbody.appendChild(tr);
                 });
             } catch (error) {
-                console.error('Error loading user roles:', error);
+                console.error('Error loading roles:', error);
+                alert(`Error: ${error.message}`);
             }
         }
 
         // Fetch permissions and populate table
-        async function populatePermissions(tableId, rolePermissions = []) {
+        async function loadPermissions(permissionsData = []) {
             try {
-                const response = await fetch(`${API_BASE_URL}/permissions/all`);
+                const response = await fetch(`${API_BASE_URL}/permissions/all`, { method: 'GET' });
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || `Failed to fetch permissions: ${response.status}`);
+                }
                 const permissions = await response.json();
-                const tbody = document.getElementById(tableId);
+                const tbody = document.getElementById('permissionsTable');
                 tbody.innerHTML = '';
-
-                permissions.forEach(permission => {
-                    const existingPerm = rolePermissions.find(p => p.permissionId === permission.id) || {};
+                if (permissions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-2 text-center text-gray-500">No permissions available</td></tr>';
+                    return;
+                }
+                permissions.forEach(perm => {
+                    const existingPerm = permissionsData.find(p => p.permissionId === perm.id) || {};
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td style="font-weight: ${permission.isMaster ? '600' : '500'}">${permission.permissionName}</td>
-                        <td class="jsgrid-align-center">
-                            <input type="checkbox" id="IsRead${permission.id}" 
-                                name="IsRead${permission.id}" 
-                                style="display: ${permission.isReadDisplay ? 'block' : 'none'}"
-                                onchange="checkFunction(${permission.id}, '${tableId}')"
-                                ${existingPerm.isRead ? 'checked' : ''}>
+                        <td class="px-4 py-2 text-sm text-gray-900 ${perm.isMaster ? 'font-bold' : ''}">${perm.permissionName}</td>
+                        <td class="px-4 py-2 text-center">
+                            <input type="checkbox" name="IsRead${perm.id}" ${existingPerm.isRead ? 'checked' : ''} ${perm.isReadDisplay ? '' : 'disabled'}>
                         </td>
-                        <td class="jsgrid-align-center">
-                            <input type="checkbox" name="IsCreate${permission.id}" 
-                                style="display: ${permission.isCreateDisplay ? 'block' : 'none'}"
-                                ${existingPerm.isCreate ? 'checked' : ''}>
+                        <td class="px-4 py-2 text-center">
+                            <input type="checkbox" name="IsCreate${perm.id}" ${existingPerm.isCreate ? 'checked' : ''} ${perm.isCreateDisplay ? '' : 'disabled'}>
                         </td>
-                        <td class="jsgrid-align-center">
-                            <input type="checkbox" name="IsUpdate${permission.id}" 
-                                style="display: ${permission.isUpdateDisplay ? 'block' : 'none'}"
-                                ${existingPerm.isUpdate ? 'checked' : ''}>
+                        <td class="px-4 py-2 text-center">
+                            <input type="checkbox" name="IsUpdate${perm.id}" ${existingPerm.isUpdate ? 'checked' : ''} ${perm.isUpdateDisplay ? '' : 'disabled'}>
                         </td>
-                        <td class="jsgrid-align-center">
-                            <input type="checkbox" name="IsDelete${permission.id}" 
-                                style="display: ${permission.isDeleteDisplay ? 'block' : 'none'}"
-                                ${existingPerm.isDelete ? 'checked' : ''}>
+                        <td class="px-4 py-2 text-center">
+                            <input type="checkbox" name="IsDelete${perm.id}" ${existingPerm.isDelete ? 'checked' : ''} ${perm.isDeleteDisplay ? '' : 'disabled'}>
                         </td>
-                        <td class="jsgrid-align-center">
-                            <input type="checkbox" name="IsExecute${permission.id}" 
-                                style="display: ${permission.isExecuteDisplay ? 'block' : 'none'}"
-                                ${existingPerm.isExecute ? 'checked' : ''}>
+                        <td class="px-4 py-2 text-center">
+                            <input type="checkbox" name="IsExecute${perm.id}" ${existingPerm.isExecute ? 'checked' : ''} ${perm.isExecuteDisplay ? '' : 'disabled'}>
                         </td>
                     `;
                     tbody.appendChild(tr);
                 });
             } catch (error) {
                 console.error('Error loading permissions:', error);
+                document.getElementById('formError').textContent = error.message;
             }
         }
 
-        // Checkbox cascade function
-        function checkFunction(id, tableId) {
-            const checkBox = document.getElementById(`IsRead${id}`);
-            const relatedCheckboxes = [
-                `IsCreate${id}`,
-                `IsUpdate${id}`,
-                `IsDelete${id}`,
-                `IsExecute${id}`
-            ];
+        // Open modal for adding a role
+        document.getElementById('addRoleBtn').addEventListener('click', () => {
+            isEditMode = false;
+            currentRoleId = null;
+            document.getElementById('modalTitle').textContent = 'Add User Role';
+            document.getElementById('roleName').value = '';
+            document.getElementById('activeField').style.display = 'none';
+            loadPermissions();
+            document.getElementById('roleModal').style.display = 'flex';
+        });
 
-            relatedCheckboxes.forEach(name => {
-                const cb = document.querySelector(`#${tableId} input[name="${name}"]`);
-                if (cb) cb.checked = checkBox.checked;
-            });
+        // Open modal for editing a role
+        async function editRole(id) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/${id}`, { method: 'GET' });
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to fetch role');
+                }
+                const role = await response.json();
+                isEditMode = true;
+                currentRoleId = id;
+                document.getElementById('modalTitle').textContent = 'Edit User Role';
+                document.getElementById('roleName').value = role.userRoleName;
+                document.getElementById('active').checked = role.active;
+                document.getElementById('activeField').style.display = 'block';
+                loadPermissions(role.permissions);
+                document.getElementById('roleModal').style.display = 'flex';
+            } catch (error) {
+                console.error('Error loading role:', error);
+                alert(error.message);
+            }
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('roleModal').style.display = 'none';
+            document.getElementById('formError').textContent = '';
         }
 
         // Collect permissions from table
-        function collectPermissions(tableId) {
+        function collectPermissions() {
             const permissions = [];
-            document.querySelectorAll(`#${tableId} tr`).forEach(row => {
-                const id = row.querySelector('input[type="checkbox"]').id.replace('IsRead', '');
+            document.querySelectorAll('#permissionsTable tr').forEach(row => {
+                const id = parseInt(row.querySelector('input').name.replace('IsRead', ''));
                 permissions.push({
-                    id: parseInt(id),
-                    IsRead: row.querySelector(`#IsRead${id}`).checked,
+                    id,
+                    IsRead: row.querySelector(`input[name="IsRead${id}"]`).checked,
                     IsCreate: row.querySelector(`input[name="IsCreate${id}"]`).checked,
                     IsUpdate: row.querySelector(`input[name="IsUpdate${id}"]`).checked,
                     IsDelete: row.querySelector(`input[name="IsDelete${id}"]`).checked,
@@ -380,106 +291,58 @@
             return permissions;
         }
 
-        // Create user role
-        document.getElementById('create-userrole-form').addEventListener('submit', async (e) => {
+        // Form submission
+        document.getElementById('roleForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const formData = new FormData(e.target);
-            const permissions = collectPermissions('create-permissions-table');
-            
+            const roleName = document.getElementById('roleName').value;
+            const active = document.getElementById('active').checked;
+            const permissions = collectPermissions();
+
+            const data = isEditMode 
+                ? { UserRoleName: roleName, Active: active, permissions }
+                : { UserRoleName: roleName, permissions };
+            const url = isEditMode ? `${API_BASE_URL}/${currentRoleId}` : `${API_BASE_URL}`;
+            const method = isEditMode ? 'PUT' : 'POST';
+
             try {
-                const response = await fetch(`${API_BASE_URL}`, {
-                    method: 'POST',
+                const response = await fetch(url, {
+                    method,
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        UserRoleName: formData.get('UserRoleName'),
-                        permissions
-                    })
+                    body: JSON.stringify(data),
                 });
-                if (response.ok) {
-                    await loadUserRoles();
-                    showSection('userrole-list');
-                } else {
+                if (!response.ok) {
                     const error = await response.json();
-                    alert(`Error: ${error.message}`);
+                    throw new Error(error.message || `Failed to ${isEditMode ? 'update' : 'create'} role`);
                 }
+                closeModal();
+                loadRoles();
             } catch (error) {
-                console.error('Error creating user role:', error);
-                alert('Failed to create user role');
+                console.error(`Error ${isEditMode ? 'updating' : 'creating'} role:`, error);
+                document.getElementById('formError').textContent = error.message;
             }
         });
 
-        // Edit user role
-        async function editUserRole(id) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/${id}`);
-                const role = await response.json();
-                
-                document.getElementById('edit-userrole-id').value = role.id;
-                document.getElementById('edit-UserRoleName').value = role.userRoleName;
-                document.getElementById('edit-Active').checked = role.active;
-                
-                await populatePermissions('edit-permissions-table', role.permissions);
-                showSection('userrole-edit');
-            } catch (error) {
-                console.error('Error loading user role for edit:', error);
-            }
-        }
-
-        document.getElementById('edit-userrole-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const permissions = collectPermissions('edit-permissions-table');
-            const id = formData.get('id');
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        UserRoleName: formData.get('UserRoleName'),
-                        Active: formData.get('Active') === 'on',
-                        permissions
-                    })
-                });
-                if (response.ok) {
-                    await loadUserRoles();
-                    showSection('userrole-list');
-                } else {
-                    const error = await response.json();
-                    alert(`Error: ${error.message}`);
-                }
-            } catch (error) {
-                console.error('Error updating user role:', error);
-                alert('Failed to update user role');
-            }
-        });
-
-        // Delete user role
-        async function deleteUserRole(id) {
-            if (confirm('Are you sure you want to delete this user role?')) {
+        // Delete role
+        async function deleteRole(id) {
+            if (confirm('Are you sure you want to delete this role?')) {
                 try {
                     const response = await fetch(`${API_BASE_URL}/${id}`, {
-                        method: 'DELETE'
+                        method: 'DELETE',
                     });
-                    if (response.ok) {
-                        await loadUserRoles();
-                    } else {
+                    if (!response.ok) {
                         const error = await response.json();
-                        alert(`Error: ${error.message}`);
+                        throw new Error(error.message || 'Failed to delete role');
                     }
+                    loadRoles();
                 } catch (error) {
-                    console.error('Error deleting user role:', error);
-                    alert('Failed to delete user role');
+                    console.error('Error deleting role:', error);
+                    alert(error.message);
                 }
             }
         }
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', async () => {
-            await loadUserRoles();
-            await populatePermissions('create-permissions-table');
-            // Initial edit form population can be skipped until edit is clicked
-        });
+        // Initial load
+        document.addEventListener('DOMContentLoaded', loadRoles);
     </script>
 </body>
 </html>
