@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management Stack</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nice-select/1.1.0/nice-select.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+ 
+        body {
+            background-color: #f5f7fa;
+            padding: 20px;
+        }
+ 
+        .panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+ 
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+ 
+        .panel-header h2 {
+            font-size: 1.5rem;
+            color: #333;
+        }
+ 
+        .btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+            cursor: pointer;
+        }
+ 
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+ 
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+ 
+        .btn-outline-primary {
+            background-color: transparent;
+            border: 1px solid #007bff;
+            color: #007bff;
+        }
+ 
+        .btn-outline-primary:hover {
+            background-color: #007bff;
+            color: white;
+        }
+ 
+        .panel-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+ 
+        .entries-per-page select {
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+ 
+        .search-bar input {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            width: 200px;
+        }
+ 
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+ 
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+ 
+        th {
+            background-color: #f8f9fa;
+            color: #666;
+            font-weight: 600;
+        }
+ 
+        td {
+            color: #333;
+        }
+ 
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+ 
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+ 
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 20px;
+        }
+ 
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+ 
+        input:checked + .slider {
+            background-color: #007bff;
+        }
+ 
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+ 
+        .action-icons i {
+            margin-right: 10px;
+            cursor: pointer;
+            color: #666;
+        }
+ 
+        .action-icons i:hover {
+            color: #007bff;
+        }
+ 
+        .action-icons .fa-trash:hover {
+            color: #dc3545;
+        }
+ 
+        .panel-footer {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+ 
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+ 
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+ 
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+ 
+        .modal-header h5 {
+            font-size: 1.25rem;
+            color: #333;
+        }
+ 
+        .close-btn {
+            font-size: 1.5rem;
+            color: #666;
+            cursor: pointer;
+        }
+ 
+        .close-btn:hover {
+            color: #333;
+        }
+ 
+        /* Form Styles */
+        .form-container {
+            padding: 10px;
+        }
+ 
+        .form-container form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+ 
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+ 
+        .form-column {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+ 
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+ 
+        .form-group label {
+            font-size: 0.9rem;
+            color: #333;
+        }
+ 
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            width: 100%;
+        }
+ 
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+ 
+        .has-error input,
+        .has-error select,
+        .has-error textarea {
+            border-color: #dc3545;
+        }
+ 
+        .has-success input,
+        .has-success select,
+        .has-success textarea {
+            border-color: #28a745;
+        }
+ 
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="panel">
+        <div class="panel-header">
+            <h2>User Management Stack</h2>
+            <div>
+                <button class="btn btn-primary" onclick="openAddUserModal()">Add User</button>
+            </div>
+        </div>
+        <div class="panel-controls" id="paginationControls">
+            <div class="entries-per-page">
+                <select id="entriesPerPage" onchange="fetchUsers()">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                entries per page
+            </div>
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search..." onkeyup="fetchUsers()">
+            </div>
+        </div>
+        <table id="userTable">
+            <thead>
+                <tr>
+                    <th>Full Name</th>
+                    <th>User Name</th>
+                    <th>Active</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="userTableBody">
+                <!-- Data will be populated dynamically -->
+            </tbody>
+        </table>
+        <div class="panel-footer" id="panelFooter">
+            Showing 0 to 0 of 0 entries
+        </div>
+    </div>
+ 
+    <!-- Add User Modal -->
+    <div class="modal" id="addUserModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>Add User</h5>
+                <span class="close-btn" onclick="closeAddUserModal()">×</span>
+            </div>
+            <div class="form-container">
+                <form id="addUserForm" autocomplete="off">
+                    <div class="form-row">
+                        <!-- Left Column -->
+                        <div class="form-column">
+                            <div class="form-group" id="FirstNameField">
+                                <label for="FirstName">First Name</label>
+                                <input type="text" placeholder="Enter First Name" name="firstName" id="FirstName">
+                            </div>
+                            <div class="form-group" id="LastNameField">
+                                <label for="LastName">Last Name</label>
+                                <input type="text" placeholder="Enter Last Name" name="lastName" id="LastName">
+                            </div>
+                            <div class="form-group" id="UserNameField">
+                                <label for="email">User Name</label>
+                                <input type="text" placeholder="Enter User Name" name="userName" id="email" autocomplete="off">
+                            </div>
+                            <div class="form-group" id="PasswordField">
+                                <label for="password">Password</label>
+                                <input type="password" placeholder="Enter Password" name="password" id="password" autocomplete="off">
+                            </div>
+                            <div class="form-group" id="ConfirmPasswordField">
+                                <label for="ConfirmPassword">Confirm Password</label>
+                                <input type="password" placeholder="Confirm Password" name="ConfirmPassword" id="ConfirmPassword" autocomplete="off">
+                            </div>
+                        </div>
+                        <!-- Right Column -->
+                        <div class="form-column">
+                            <div class="form-group" id="ContactNoField">
+                                <label for="ContactNo">Contact No.</label>
+                                <input type="text" placeholder="Enter Contact No." name="contactNo" id="ContactNo" autocomplete="off">
+                            </div>
+                            <div class="form-group" id="EmailIdField">
+                                <label for="EmailId">Email Id</label>
+                                <input type="email" placeholder="Enter Email Id" name="emailId" id="EmailId">
+                            </div>
+                            <div class="form-group" id="AddressField">
+                                <label for="Address">Address</label>
+                                <input type="text" placeholder="Enter Address" name="address" id="Address">
+                            </div>
+                            <div class="form-group" id="UserRoleField">
+                                <label>User Role</label>
+                                <select id="UserRoleId" name="userRoleId">
+                                    <option value="">Select Userrole</option>
+                                    <option value="1">Admin</option>
+                                    <option value="2">User</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Notes</label>
+                                <textarea name="notes" placeholder="Enter Notes"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-outline-primary">Create</button>
+                </form>
+            </div>
+        </div>
+    </div>
+ 
+    <!-- Edit User Modal -->
+    <div class="modal" id="editUserModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>Edit User</h5>
+                <span class="close-btn" onclick="closeEditUserModal()">×</span>
+            </div>
+            <div class="form-container">
+                <form id="editUserForm" autocomplete="off">
+                    <input type="hidden" id="editUserId" name="userId"> <!-- Added hidden input -->
+                    <div class="form-row">
+                        <div class="form-column">
+                            <div class="form-group" id="editFirstNameField">
+                                <label for="editFirstName">First Name</label>
+                                <input type="text" placeholder="Enter First Name" name="firstName" id="editFirstName">
+                            </div>
+                            <div class="form-group" id="editLastNameField">
+                                <label for="editLastName">Last Name</label>
+                                <input type="text" placeholder="Enter Last Name" name="lastName" id="editLastName">
+                            </div>
+                            <div class="form-group" id="editUserNameField">
+                                <label for="editUserName">User Name</label>
+                                <input type="text" placeholder="Enter User Name" name="userName" id="editUserName" autocomplete="off">
+                            </div>
+                            <div class="form-group" id="editPasswordField">
+                                <label for="editPassword">Password (Leave blank to keep unchanged)</label>
+                                <input type="password" placeholder="Enter New Password" name="password" id="editPassword" autocomplete="off">
+                            </div>
+                            <div class="form-group" id="editConfirmPasswordField">
+                                <label for="editConfirmPassword">Confirm Password</label>
+                                <input type="password" placeholder="Confirm New Password" name="ConfirmPassword" id="editConfirmPassword" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="form-column">
+                            <div class="form-group" id="editContactNoField">
+                                <label for="editContactNo">Contact No.</label>
+                                <input type="text" placeholder="Enter Contact No." name="contactNo" id="editContactNo" autocomplete="off">
+                            </div>
+                            <div class="form-group" id="editEmailIdField">
+                                <label for="editEmailId">Email Id</label>
+                                <input type="email" placeholder="Enter Email Id" name="emailId" id="editEmailId">
+                            </div>
+                            <div class="form-group" id="editAddressField">
+                                <label for="editAddress">Address</label>
+                                <input type="text" placeholder="Enter Address" name="address" id="editAddress">
+                            </div>
+                            <div class="form-group" id="editUserRoleField">
+                                <label>User Role</label>
+                                <select id="editUserRoleId" name="userRoleId">
+                                    <option value="">Select Userrole</option>
+                                    <option value="1">Admin</option>
+                                    <option value="2">User</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Notes</label>
+                                <textarea name="notes" placeholder="Enter Notes" id="editNotes"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-outline-primary">Update</button>
+                </form>
+            </div>
+        </div>
+    </div>
+ 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nice-select/1.1.0/js/jquery.nice-select.min.js"></script>
+    <script>
+        let currentPage = 1;
+        let entriesPerPage = 10;
+        let isPaginatedView = false; // Track the current view mode
+        let currentEditUserId = null; // Global variable to store editing user ID
+ 
+        // Modal Functions
+        function openAddUserModal() {
+            document.getElementById('addUserModal').style.display = 'flex';
+        }
+ 
+        function closeAddUserModal() {
+            document.getElementById('addUserModal').style.display = 'none';
+            document.getElementById('addUserForm').reset();
+            $('.form-group').removeClass('has-error has-success');
+        }
+ 
+        function openEditUserModal() {
+            document.getElementById('editUserModal').style.display = 'flex';
+        }
+ 
+        function closeEditUserModal() {
+            document.getElementById('editUserModal').style.display = 'none';
+            document.getElementById('editUserForm').reset();
+            $('.form-group').removeClass('has-error has-success');
+            // Do not reset currentEditUserId here; reset after successful submission
+        }
+ 
+        // Fetch all users without pagination
+        async function fetchAllUsers() {
+            try {
+                const response = await fetch(`http://192.168.3.77:3001/users/all`);
+               
+                const data = await response.json();
+ 
+                const tbody = document.getElementById('userTableBody');
+                tbody.innerHTML = '';
+ 
+                data.users.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${user.firstName} ${user.lastName}</td>
+                        <td>${user.userName}</td>
+                        <td>
+                            <label class="toggle-switch">
+                                <input type="checkbox" ${user.isActive ? 'checked' : ''} onchange="toggleUserStatus(${user.id}, this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                        </td>
+                        <td class="action-icons">
+                            <i class="fas fa-edit" onclick="editUser(${user.id})"></i>
+                            <i class="fas fa-trash" onclick="deleteUser(${user.id})"></i>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+ 
+                document.getElementById('panelFooter').textContent = `Showing 1 to ${data.users.length} of ${data.users.length} entries`;
+                document.getElementById('panelFooter').textContent = `Showing 1 to ${data.users.length} of ${data.users.length} entries`;
+                document.getElementById('paginationControls').style.display = 'none';
+                isPaginatedView = false;
+            } catch (error) {
+                console.error('Error fetching all users:', error);
+                showMessage('Error fetching all users', 'error');
+            }
+        }
+ 
+        // Fetch users with pagination and search
+        async function fetchUsers() {
+            entriesPerPage = document.getElementById('entriesPerPage').value;
+            const searchQuery = document.getElementById('searchInput').value;
+ 
+            try {
+                const response = await fetch(`http://192.168.3.77:3001/users?page=${currentPage}&limit=${entriesPerPage}&search=${searchQuery}`);
+                const data = await response.json();
+ 
+                const tbody = document.getElementById('userTableBody');
+                tbody.innerHTML = '';
+ 
+                data.users.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${user.firstName} ${user.lastName}</td>
+                        <td>${user.userName}</td>
+                        <td>
+                            <label class="toggle-switch">
+                                <input type="checkbox" ${user.isActive ? 'checked' : ''} onchange="toggleUserStatus(${user.id}, this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                        </td>
+                        <td class="action-icons">
+                            <i class="fas fa-edit" onclick="editUser(${user.id})"></i>
+                            <i class="fas fa-trash" onclick="deleteUser(${user.id})"></i>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+ 
+                document.getElementById('panelFooter').textContent = `Showing ${data.start} to ${data.end} of ${data.total} entries`;
+                document.getElementById('paginationControls').style.display = 'flex';
+                isPaginatedView = true;
+            } catch (error) {
+                console.error('Error fetching users:', error);
+                showMessage('Error fetching users', 'error');
+            }
+        }
+ 
+        // Toggle user active status
+        async function toggleUserStatus(userId, isActive) {
+            try {
+                await fetch(`http://192.168.3.77:3001/users/${userId}/toggle`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ isActive }),
+                });
+                if (isPaginatedView) {
+                    fetaUsers();
+                } else {
+                    fetchAllUsers();
+                }
+            } catch (error) {
+                console.error('Error toggling user status:', error);
+                showMessage('Error toggling user status', 'error');
+                if (isPaginatedView) {
+                    fetchUsers();
+                } else {
+                    fetchAllUsers();
+                }
+            }
+        }
+ 
+        // Edit user
+        async function editUser(userId) {
+            try {
+                if (!userId || isNaN(Number(userId))) {
+                    throw new Error('Invalid user ID');
+                }
+                console.log('Fetching user with ID:', userId);
+                const response = await fetch(`http://192.168.3.77:3001/users/${userId}`);
+                if (!response.ok) throw new Error('Failed to fetch user data');
+                const user = await response.json();
+ 
+                // Populate form fields
+                document.getElementById('editFirstName').value = user.firstName || '';
+                document.getElementById('editLastName').value = user.lastName || '';
+                document.getElementById('editUserName').value = user.userName || '';
+                document.getElementById('editContactNo').value = user.contactNo || '';
+                document.getElementById('editEmailId').value = user.emailId || '';
+                document.getElementById('editAddress').value = user.address || '';
+                document.getElementById('editUserRoleId').value = user.userRoleId || '';
+                document.getElementById('editNotes').value = user.notes || '';
+ 
+                // Update NiceSelect after changing the value
+                if (jQuery.fn.niceSelect) {
+                    $("#editUserRoleId").val(user.userRoleId || '').niceSelect('update');
+                } else {
+                    console.error('NiceSelect is not loaded');
+                }
+ 
+                // Store userId in hidden input, dataset, and global variable
+                document.getElementById('editUserId').value = userId;
+                document.getElementById('editUserForm').dataset.userId = userId;
+                currentEditUserId = userId;
+ 
+                console.log('Stored userId - Hidden:', document.getElementById('editUserId').value);
+                console.log('Stored userId - Dataset:', document.getElementById('editUserForm').dataset.userId);
+                console.log('Stored userId - Global:', currentEditUserId);
+ 
+                openEditUserModal();
+            } catch (error) {
+                console.error('Error fetching user:', error);
+                showMessage('Error fetching user data', 'error');
+            }
+        }
+ 
+        // Delete user
+        async function deleteUser(userId) {
+            if (confirm('Are you sure you want to delete this user?')) {
+                try {
+ 
+                    await fetch(`http://192.168.3.77:3001/users/${userId}`, {
+ 
+                        method: 'DELETE',
+                    });
+                    if (isPaginatedView) {
+                        fetchUsers();
+                    } else {
+                        fetchAllUsers();
+                    }
+                } catch (error) {
+                    console.error('Error deleting user:', error);
+                    showMessage('Error deleting user', 'error');
+                }
+            }
+        }
+ 
+        // Form Submission
+        $(document).ready(function () {
+            // Initialize NiceSelect on page load with a check
+            if (jQuery.fn.niceSelect) {
+                $("#UserRoleId").niceSelect({ searchable: true });
+                $("#editUserRoleId").niceSelect({ searchable: true });
+            } else {
+                console.error('NiceSelect library failed to load');
+            }
+ 
+            $("#addUserForm").submit(function (event) {
+                event.preventDefault();
+ 
+                const password = $("#password").val();
+                const confirmPassword = $("#ConfirmPassword").val();
+ 
+                if (!$("#FirstName").val()) {
+                    $("#FirstNameField").addClass("has-error");
+                    showMessage("First Name is required", "error");
+                    return;
+                }
+                if (!$("#LastName").val()) {
+                    $("#LastNameField").addClass("has-error");
+                    showMessage("Last Name is required", "error");
+                    return;
+                }
+                if (!$("#email").val()) {
+                    $("#UserNameField").addClass("has-error");
+                    showMessage("User Name is required", "error");
+                    return;
+                }
+                if (!password) {
+                    $("#PasswordField").addClass("has-error");
+                    showMessage("Password is required", "error");
+                    return;
+                }
+                if (password !== confirmPassword) {
+                    $("#PasswordField").addClass("has-error");
+                    $("#ConfirmPasswordField").addClass("has-error");
+                    showMessage("Passwords do not match", "error");
+                    return;
+                }
+                if (!$("#UserRoleId").val()) {
+                    $("#UserRoleField").addClass("has-error");
+                    showMessage("User Role is required", "error");
+                    return;
+                }
+ 
+                const formData = {
+                    firstName: $("#FirstName").val(),
+                    lastName: $("#LastName").val(),
+                    userName: $("#email").val(),
+                    password: password,
+                    contactNo: $("#ContactNo").val() || null,
+                    emailId: $("#EmailId").val() || null,
+                    address: $("#Address").val() || null,
+                    userRoleId: parseInt($("#UserRoleId").val()),
+                    notes: $("textarea[name='notes']").val() || null,
+                };
+ 
+ 
+                fetch('http://192.168.3.77:3001/users', {
+ 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData),
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to create user');
+                    return response.json();
+                })
+                .then(data => {
+                    showMessage(data.message, 'success');
+                    closeAddUserModal();
+                    if (isPaginatedView) {
+                        fetchUsers();
+                    } else {
+                        fetchAllUsers();
+                    }
+                })
+                .catch(error => showMessage(error.message || 'Error creating user', 'error'));
+            });
+ 
+            $("#editUserForm").submit(async function (event) {
+                event.preventDefault();
+ 
+                // Prioritize hidden input, then dataset, then global variable
+                const userId = Number(document.getElementById('editUserId').value) ||
+                              Number(this.dataset.userId) ||
+                              currentEditUserId;
+ 
+                console.log('Submitting update for user ID:', userId);
+                console.log('Hidden userId:', document.getElementById('editUserId').value);
+                console.log('Dataset userId:', this.dataset.userId);
+                console.log('Global userId:', currentEditUserId);
+ 
+                if (isNaN(userId) || !userId) {
+                    showMessage('Invalid user ID', 'error');
+                    return;
+                }
+ 
+                const password = $("#editPassword").val();
+                const confirmPassword = $("#editConfirmPassword").val();
+ 
+                if (!$("#editFirstName").val()) {
+                    $("#editFirstNameField").addClass("has-error");
+                    showMessage("First Name is required", "error");
+                    return;
+                }
+                if (!$("#editLastName").val()) {
+                    $("#editLastNameField").addClass("has-error");
+                    showMessage("Last Name is required", "error");
+                    return;
+                }
+                if (!$("#editUserName").val()) {
+                    $("#editUserNameField").addClass("has-error");
+                    showMessage("User Name is required", "error");
+                    return;
+                }
+                if (password && password !== confirmPassword) {
+                    $("#editPasswordField").addClass("has-error");
+                    $("#editConfirmPasswordField").addClass("has-error");
+                    showMessage("Passwords do not match", "error");
+                    return;
+                }
+                if (!$("#editUserRoleId").val()) {
+                    $("#editUserRoleField").addClass("has-error");
+                    showMessage("User Role is required", "error");
+                    return;
+                }
+ 
+                const formData = {
+                    firstName: $("#editFirstName").val(),
+                    lastName: $("#editLastName").val(),
+                    userName: $("#editUserName").val(),
+                    contactNo: $("#editContactNo").val() || null,
+                    emailId: $("#editEmailId").val() || null,
+                    address: $("#editAddress").val() || null,
+                    userRoleId: parseInt($("#editUserRoleId").val()),
+                    notes: $("#editNotes").val() || null,
+                };
+ 
+                if (password) {
+                    formData.password = password;
+                }
+ 
+                try {
+                    const response = await fetch(`http://192.168.3.77:3001/users/${userId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData),
+                    });
+ 
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to update user');
+                    }
+                    const data = await response.json();
+ 
+                    showMessage(data.message, 'success');
+                    closeEditUserModal();
+                    currentEditUserId = null; // Reset after success
+                    if (isPaginatedView) {
+                        fetchUsers();
+                    } else {
+                        fetchAllUsers();
+                    }
+                } catch (error) {
+                    console.error('Update error:', error);
+                    showMessage(error.message || 'Error updating user', 'error');
+                }
+            });
+ 
+            $("#FirstName, #LastName, #email, #password, #ConfirmPassword, #UserRoleId").on("input change", function () {
+                $(this).closest(".form-group").removeClass("has-error").addClass("has-success");
+            });
+ 
+            $("#editFirstName, #editLastName, #editUserName, #editPassword, #editConfirmPassword, #editUserRoleId").on("input change", function () {
+                $(this).closest(".form-group").removeClass("has-error").addClass("has-success");
+            });
+ 
+            $("#email").on("input", function () {
+                this.value = this.value.replace(/\s+/g, "").toLowerCase();
+            });
+ 
+            $("#editUserName").on("input", function () {
+                this.value = this.value.replace(/\s+/g, "").toLowerCase();
+            });
+        });
+ 
+        // Message Display Function
+        function showMessage(message, type) {
+            let messageBox = document.createElement("div");
+            messageBox.textContent = message;
+            messageBox.style.position = "fixed";
+            messageBox.style.top = "20px";
+            messageBox.style.right = "20px";
+            messageBox.style.padding = "10px 20px";
+            messageBox.style.borderRadius = "5px";
+            messageBox.style.color = "white";
+            messageBox.style.zIndex = "1000";
+            messageBox.style.backgroundColor = type === "error" ? "#dc3545" : "#28a745";
+ 
+            document.body.appendChild(messageBox);
+            setTimeout(() => messageBox.remove(), 3000);
+        }
+ 
+        // Initial fetch
+        fetchAllUsers();
+    </script>
+</body>
+</html>
+ 
+ 
