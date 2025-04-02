@@ -37,47 +37,6 @@
             font-size: 0.9rem;
             margin-top: 5px;
         }
-
-        /* Toggle Switch Styling */
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 40px;
-            height: 20px;
-        }
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: 0.4s;
-            border-radius: 20px;
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 2px;
-            bottom: 2px;
-            background-color: white;
-            transition: 0.4s;
-            border-radius: 50%;
-        }
-        input:checked + .slider {
-            background-color: #3b82f6; /* Tailwind's blue-500 */
-        }
-        input:checked + .slider:before {
-            transform: translateX(20px);
-        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -116,16 +75,7 @@
                 <form id="roleForm">
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700">Role Name</label>
-                        <input type="text" id="roleName" name="UserRoleName" class="mt-1 block w-full border border-gray-300 rounded-md p-2" required>
-                    </div>
-                    <div class="mb-4" id="activeField">
-                        <label class="flex items-center">
-                            <span class="text-sm font-medium text-gray-700 mr-2">Active</span>
-                            <div class="toggle-switch">
-                                <input type="checkbox" id="active" name="Active">
-                                <span class="slider"></span>
-                            </div>
-                        </label>
+                        <input type="text" id="roleName" name="UserRoleName" class="mt-1 block w-full border border-gray-300 rounded-md p-2" placeholder="Enter User Role Name" required>
                     </div>
                     <div class="mb-4">
                         <h3 class="text-lg font-medium text-gray-800">Permissions</h3>
@@ -157,7 +107,7 @@
         let isEditMode = false;
         let currentRoleId = null;
 
-        // Fetch and display all roles
+        // Fetch and display all roles in the table
         async function loadRoles() {
             try {
                 const response = await fetch(`${API_BASE_URL}`, { method: 'GET' });
@@ -190,7 +140,7 @@
             }
         }
 
-        // Fetch permissions and populate table
+        // Fetch permissions and populate the table (editable), only showing "User Management"
         async function loadPermissions(permissionsData = []) {
             try {
                 const response = await fetch(`${API_BASE_URL}/permissions/all`, { method: 'GET' });
@@ -199,13 +149,16 @@
                     throw new Error(error.message || `Failed to fetch permissions: ${response.status}`);
                 }
                 const permissions = await response.json();
+                // Filter to only include "User Management"
+                const filteredPermissions = permissions.filter(perm => perm.permissionName === "User Management");
+                
                 const tbody = document.getElementById('permissionsTable');
                 tbody.innerHTML = '';
-                if (permissions.length === 0) {
+                if (filteredPermissions.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-2 text-center text-gray-500">No permissions available</td></tr>';
                     return;
                 }
-                permissions.forEach(perm => {
+                filteredPermissions.forEach(perm => {
                     const existingPerm = permissionsData.find(p => p.permissionId === perm.id) || {};
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
@@ -240,7 +193,6 @@
             currentRoleId = null;
             document.getElementById('modalTitle').textContent = 'Add User Role';
             document.getElementById('roleName').value = '';
-            document.getElementById('activeField').style.display = 'none';
             loadPermissions();
             document.getElementById('roleModal').style.display = 'flex';
         });
@@ -258,9 +210,17 @@
                 currentRoleId = id;
                 document.getElementById('modalTitle').textContent = 'Edit User Role';
                 document.getElementById('roleName').value = role.userRoleName;
-                document.getElementById('active').checked = role.active;
-                document.getElementById('activeField').style.display = 'block';
-                loadPermissions(role.permissions);
+                const formattedPermissions = role.permissions
+                    .filter(perm => perm.permission.permissionName === "User Management") // Filter for "User Management" during edit
+                    .map(perm => ({
+                        permissionId: perm.permission.id,
+                        isRead: perm.isRead,
+                        isCreate: perm.isCreate,
+                        isUpdate: perm.isUpdate,
+                        isDelete: perm.isDelete,
+                        isExecute: perm.isExecute,
+                    }));
+                loadPermissions(formattedPermissions);
                 document.getElementById('roleModal').style.display = 'flex';
             } catch (error) {
                 console.error('Error loading role:', error);
@@ -274,7 +234,7 @@
             document.getElementById('formError').textContent = '';
         }
 
-        // Collect permissions from table
+        // Collect permissions from the table
         function collectPermissions() {
             const permissions = [];
             document.querySelectorAll('#permissionsTable tr').forEach(row => {
@@ -295,11 +255,10 @@
         document.getElementById('roleForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const roleName = document.getElementById('roleName').value;
-            const active = document.getElementById('active').checked;
             const permissions = collectPermissions();
 
             const data = isEditMode 
-                ? { UserRoleName: roleName, Active: active, permissions }
+                ? { UserRoleName: roleName, permissions }
                 : { UserRoleName: roleName, permissions };
             const url = isEditMode ? `${API_BASE_URL}/${currentRoleId}` : `${API_BASE_URL}`;
             const method = isEditMode ? 'PUT' : 'POST';
