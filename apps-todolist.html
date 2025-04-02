@@ -2760,7 +2760,7 @@
                 console.log('Sending Data:', formattedData);
     
                 try {
-                    const response = await axios.post('http://192.168.3.74:3001/visitors', formattedData, {
+                    const response = await axios.post('http://192.168.3.73:3001/visitors', formattedData, {
                         headers: { 'Content-Type': 'application/json' }
                     });
                     console.log('Response:', response.data);
@@ -2784,6 +2784,7 @@
                 }
             });
         });
+        
     </script>
     <script src="assets/js/custom.js"></script>
     <script>
