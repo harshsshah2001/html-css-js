@@ -345,6 +345,7 @@
 
         // Form submission
         // Form submission
+// Form submission
 document.getElementById('roleForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const roleName = document.getElementById('roleName').value;
@@ -360,7 +361,7 @@ document.getElementById('roleForm').addEventListener('submit', async (e) => {
                 throw new Error(error.message || 'Failed to fetch role');
             }
             const role = await response.json();
-            // Include UserRoleName, Active, and permissions in the payload
+            // Include UserRoleName, Active, and permissions in the payload for editing
             data = {
                 UserRoleName: roleName,
                 Active: role.active, // Use the current active status
@@ -372,10 +373,9 @@ document.getElementById('roleForm').addEventListener('submit', async (e) => {
             return;
         }
     } else {
-        // For creating a new role, set Active to true by default
+        // For creating a new role, do NOT include Active (backend sets it to true by default)
         data = {
             UserRoleName: roleName,
-            Active: true,
             permissions,
         };
     }
