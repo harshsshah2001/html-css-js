@@ -15,11 +15,12 @@
         class="relative overflow-x-hidden font-nunito text-sm font-normal antialiased"
         :class="[ $store.app.sidebar ? 'toggle-sidebar' : '', $store.app.theme === 'dark' || $store.app.isDarkMode ?  'dark' : '', $store.app.menu, $store.app.layout, $store.app.rtlClass]"
     >
-        <!-- screen loader and scroll to top button remain unchanged -->
+        <!-- Screen loader -->
         <div class="screen_loader animate__animated fixed inset-0 z-[60] grid place-content-center bg-[#fafafa] dark:bg-[#060818]">
             <!-- Loader SVG remains unchanged -->
         </div>
 
+        <!-- Scroll to top button -->
         <div class="fixed bottom-6 right-6 z-50" x-data="scrollToTop">
             <!-- Scroll to top button remains unchanged -->
         </div>
@@ -31,7 +32,6 @@
                 </div>
 
                 <div class="relative flex min-h-screen items-center justify-center bg-[url(../images/auth/map.png)] bg-cover bg-center bg-no-repeat px-6 py-10 dark:bg-[#060818] sm:px-16">
-                    <!-- Background images remain unchanged -->
                     <div class="relative w-full max-w-[870px] rounded-md bg-[linear-gradient(45deg,#fff9f9_0%,rgba(255,255,255,0)_25%,rgba(255,255,255,0)_75%,_#fff9f9_100%)] p-2 dark:bg-[linear-gradient(52.22deg,#0E1726_0%,rgba(14,23,38,0)_18.66%,rgba(14,23,38,0)_51.04%,rgba(14,23,38,0)_80.07%,#0E1726_100%)]">
                         <div class="relative flex flex-col justify-center rounded-md bg-white/60 backdrop-blur-lg dark:bg-black/50 px-6 lg:min-h-[758px] py-20">
                             <div class="mx-auto w-full max-w-[440px]">
@@ -46,7 +46,6 @@
                                             <input id="Username" type="text" placeholder="Enter Username" class="form-input ps-10 placeholder:text-white-dark" x-model="userName" />
                                             <span class="absolute start-4 top-1/2 -translate-y-1/2">
                                                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                                                    <!-- Email icon replaced with a user icon -->
                                                     <path d="M9 9C11.2091 9 13 7.20914 13 5C13 2.79086 11.2091 1 9 1C6.79086 1 5 2.79086 5 5C5 7.20914 6.79086 9 9 9Z" fill="currentColor" opacity="0.5"/>
                                                     <path d="M3 17V15C3 13.3431 4.34315 12 6 12H12C13.6569 12 15 13.3431 15 15V17H3Z" fill="currentColor"/>
                                                 </svg>
@@ -58,7 +57,6 @@
                                         <div class="relative text-white-dark">
                                             <input id="Password" type="password" placeholder="Enter Password" class="form-input ps-10 placeholder:text-white-dark" x-model="password" />
                                             <span class="absolute start-4 top-1/2 -translate-y-1/2">
-                                                <!-- Password icon remains unchanged -->
                                                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                                                     <path opacity="0.5" d="M1.5 12C1.5 9.87868 1.5 8.81802 2.15901 8.15901C2.81802 7.5 3.87868 7.5 6 7.5H12C14.1213 7.5 15.182 7.5 15.841 8.15901C16.5 8.81802 16.5 9.87868 16.5 12C16.5 14.1213 16.5 15.182 15.841 15.841C15.182 16.5 14.1213 16.5 12 16.5H6C3.87868 16.5 2.81802 16.5 2.15901 15.841C1.5 15.182 1.5 14.1213 1.5 12Z" fill="currentColor" />
                                                     <path d="M6 12.75C6.41421 12.75 6.75 12.4142 6.75 12C6.75 11.5858 6.41421 11.25 6 11.25C5.58579 11.25 5.25 11.5858 5.25 12C5.25 12.4142 5.58579 12.75 6 12.75Z" fill="currentColor" />
@@ -74,7 +72,6 @@
                                         Sign in
                                     </button>
                                 </form>
-                                <!-- Social login and signup link remain unchanged -->
                             </div>
                         </div>
                     </div>
@@ -135,7 +132,6 @@
                         { id: 16, key: 'Arabic', value: 'ae' },
                     ],
                     async loginUser() {
-                        // Basic validation
                         if (!this.userName || typeof this.userName !== 'string') {
                             alert('Username must be a non-empty string.');
                             return;
@@ -146,15 +142,10 @@
                         }
 
                         try {
-                            const response = await fetch('http://192.168.3.75:3001/users/login', {
+                            const response = await fetch('http://192.168.3.77:3001/users/login', {
                                 method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                    userName: this.userName, // Changed from email to userName
-                                    password: this.password,
-                                }),
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ userName: this.userName, password: this.password }),
                             });
 
                             const data = await response.json();
@@ -162,6 +153,7 @@
                             console.log('Response Data:', data);
 
                             if (response.ok) {
+                                localStorage.setItem('token', data.token);
                                 console.log('Login successful:', data);
                                 window.location.href = 'index.html';
                             } else {
@@ -175,6 +167,15 @@
                     },
                 }));
             });
+
+            // Redirect to index.html if already logged in
+            (function () {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    console.log('Token found, redirecting to index.html');
+                    window.location.href = 'index.html';
+                }
+            })();
         </script>
     </body>
 </html>

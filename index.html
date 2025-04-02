@@ -2189,7 +2189,11 @@
                                             >
                                         </li>
                                         <li class="border-t border-white-light dark:border-white-light/10">
-                                            <a href="auth-boxed-signin.html" class="!py-3 text-danger" @click="toggle">
+                                            <a
+                                                href="javascript:void(0);"
+                                                class="!py-3 text-danger"
+                                                @click="signOut"
+                                            >
                                                 <svg
                                                     class="h-4.5 w-4.5 shrink-0 rotate-90 ltr:mr-2 rtl:ml-2"
                                                     width="18"
@@ -2216,6 +2220,7 @@
                                                 Sign Out
                                             </a>
                                         </li>
+                                        
                                     </ul>
                                 </div>
                             </div>
@@ -4700,5 +4705,31 @@
                 }));
             });
         </script>
+        <!-- index.html -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = 'auth-boxed-signin.html';
+      }
+    });
+  
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = 'auth-boxed-signin.html';
+    }
+  </script>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('main', () => ({
+            // Other existing data properties (e.g., sidebar, theme) can go here
+            signOut() {
+                localStorage.removeItem('token'); // Clear the token
+                window.location.href = 'auth-boxed-signin.html'; // Redirect to login page
+            },
+        }));
+    });
+</script>
     </body>
 </html>
