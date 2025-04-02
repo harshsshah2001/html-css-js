@@ -299,8 +299,6 @@
         <div class="panel-header">
             <h2>User Management Stack</h2>
             <div>
-                <button class="btn btn-primary" onclick="fetchAllUsers()">Show All Users</button>
-                <button class="btn btn-primary" onclick="fetchUsers()">Paginated View</button>
                 <button class="btn btn-primary" onclick="openAddUserModal()">Add User</button>
             </div>
         </div>
@@ -402,20 +400,85 @@
         </div>
     </div>
 
+    <!-- Edit User Modal -->
+    <div class="modal" id="editUserModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>Edit User</h5>
+                <span class="close-btn" onclick="closeEditUserModal()">×</span>
+            </div>
+            <div class="form-container">
+                <form id="editUserForm" autocomplete="off">
+                    <input type="hidden" id="editUserId" name="userId"> <!-- Added hidden input -->
+                    <div class="form-row">
+                        <div class="form-column">
+                            <div class="form-group" id="editFirstNameField">
+                                <label for="editFirstName">First Name</label>
+                                <input type="text" placeholder="Enter First Name" name="firstName" id="editFirstName">
+                            </div>
+                            <div class="form-group" id="editLastNameField">
+                                <label for="editLastName">Last Name</label>
+                                <input type="text" placeholder="Enter Last Name" name="lastName" id="editLastName">
+                            </div>
+                            <div class="form-group" id="editUserNameField">
+                                <label for="editUserName">User Name</label>
+                                <input type="text" placeholder="Enter User Name" name="userName" id="editUserName" autocomplete="off">
+                            </div>
+                            <div class="form-group" id="editPasswordField">
+                                <label for="editPassword">Password (Leave blank to keep unchanged)</label>
+                                <input type="password" placeholder="Enter New Password" name="password" id="editPassword" autocomplete="off">
+                            </div>
+                            <div class="form-group" id="editConfirmPasswordField">
+                                <label for="editConfirmPassword">Confirm Password</label>
+                                <input type="password" placeholder="Confirm New Password" name="ConfirmPassword" id="editConfirmPassword" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="form-column">
+                            <div class="form-group" id="editContactNoField">
+                                <label for="editContactNo">Contact No.</label>
+                                <input type="text" placeholder="Enter Contact No." name="contactNo" id="editContactNo" autocomplete="off">
+                            </div>
+                            <div class="form-group" id="editEmailIdField">
+                                <label for="editEmailId">Email Id</label>
+                                <input type="email" placeholder="Enter Email Id" name="emailId" id="editEmailId">
+                            </div>
+                            <div class="form-group" id="editAddressField">
+                                <label for="editAddress">Address</label>
+                                <input type="text" placeholder="Enter Address" name="address" id="editAddress">
+                            </div>
+                            <div class="form-group" id="editUserRoleField">
+                                <label>User Role</label>
+                                <select id="editUserRoleId" name="userRoleId">
+                                    <option value="">Select Userrole</option>
+                                    <option value="1">Admin</option>
+                                    <option value="2">User</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Notes</label>
+                                <textarea name="notes" placeholder="Enter Notes" id="editNotes"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-outline-primary">Update</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nice-select/1.1.0/js/jquery.nice-select.min.js"></script>
     <script>
         const USER_API_BASE_URL = 'http://192.168.3.77:3001/users';
-        const ROLE_API_BASE_URL = 'http://localhost:3001/userroles'; // Using port 3001 for roles
+        const ROLE_API_BASE_URL = 'http://192.168.3.77:3001/userroles'; // Using port 3001 for roles
         let currentPage = 1;
         let entriesPerPage = 10;
-        let isPaginatedView = false;
+        let isPaginatedView = false; // Track the current view mode
+        let currentEditUserId = null; // Global variable to store editing user ID
 
         // Modal Functions
         function openAddUserModal() {
             document.getElementById('addUserModal').style.display = 'flex';
-            fetchUserRolesForDropdown(); // Fetch roles when opening modal
-            NiceSelect.bind(document.getElementById("UserRoleId"), { searchable: true });
         }
 
         function closeAddUserModal() {
@@ -424,33 +487,21 @@
             $('.form-group').removeClass('has-error has-success');
         }
 
-        // Fetch user roles for dropdown
-        async function fetchUserRolesForDropdown() {
-            try {
-                const response = await fetch(`${ROLE_API_BASE_URL}`);
-                const roles = await response.json();
-                const select = document.getElementById('UserRoleId');
-                select.innerHTML = '<option value="">Select User Role</option>';
-                roles.forEach(role => {
-                    if (role.active) { // Only show active roles
-                        const option = document.createElement('option');
-                        option.value = role.id;
-                        option.textContent = role.userRoleName;
-                        select.appendChild(option);
-                    }
-                });
-                // Re-initialize NiceSelect after updating options
-                $(select).niceSelect('update');
-            } catch (error) {
-                console.error('Error fetching user roles:', error);
-                showMessage('Error loading user roles', 'error');
-            }
+        function openEditUserModal() {
+            document.getElementById('editUserModal').style.display = 'flex';
+        }
+
+        function closeEditUserModal() {
+            document.getElementById('editUserModal').style.display = 'none';
+            document.getElementById('editUserForm').reset();
+            $('.form-group').removeClass('has-error has-success');
+            // Do not reset currentEditUserId here; reset after successful submission
         }
 
         // Fetch all users without pagination
         async function fetchAllUsers() {
             try {
-                const response = await fetch(`${USER_API_BASE_URL}/all`);
+                const response = await fetch(`http://192.168.3.77:3001/users/all`);
                 const data = await response.json();
 
                 const tbody = document.getElementById('userTableBody');
@@ -476,6 +527,7 @@
                 });
 
                 document.getElementById('panelFooter').textContent = `Showing 1 to ${data.users.length} of ${data.users.length} entries`;
+                document.getElementById('panelFooter').textContent = `Showing 1 to ${data.users.length} of ${data.users.length} entries`;
                 document.getElementById('paginationControls').style.display = 'none';
                 isPaginatedView = false;
             } catch (error) {
@@ -490,7 +542,7 @@
             const searchQuery = document.getElementById('searchInput').value;
 
             try {
-                const response = await fetch(`${USER_API_BASE_URL}?page=${currentPage}&limit=${entriesPerPage}&search=${searchQuery}`);
+                const response = await fetch(`http://192.168.3.77:3001/users?page=${currentPage}&limit=${entriesPerPage}&search=${searchQuery}`);
                 const data = await response.json();
 
                 const tbody = document.getElementById('userTableBody');
@@ -527,13 +579,13 @@
         // Toggle user active status
         async function toggleUserStatus(userId, isActive) {
             try {
-                await fetch(`${USER_API_BASE_URL}/${userId}/toggle`, {
+                await fetch(`http://192.168.3.77:3001/users/${userId}/toggle`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ isActive }),
                 });
                 if (isPaginatedView) {
-                    fetchUsers();
+                    fetaUsers();
                 } else {
                     fetchAllUsers();
                 }
@@ -548,16 +600,55 @@
             }
         }
 
-        // Edit user (redirect to edit page)
-        function editUser(userId) {
-            window.location.href = `edit-user.html?id=${userId}`;
+        // Edit user
+        async function editUser(userId) {
+            try {
+                if (!userId || isNaN(Number(userId))) {
+                    throw new Error('Invalid user ID');
+                }
+                console.log('Fetching user with ID:', userId);
+                const response = await fetch(`http://192.168.3.77:3001/users/${userId}`);
+                if (!response.ok) throw new Error('Failed to fetch user data');
+                const user = await response.json();
+
+                // Populate form fields
+                document.getElementById('editFirstName').value = user.firstName || '';
+                document.getElementById('editLastName').value = user.lastName || '';
+                document.getElementById('editUserName').value = user.userName || '';
+                document.getElementById('editContactNo').value = user.contactNo || '';
+                document.getElementById('editEmailId').value = user.emailId || '';
+                document.getElementById('editAddress').value = user.address || '';
+                document.getElementById('editUserRoleId').value = user.userRoleId || '';
+                document.getElementById('editNotes').value = user.notes || '';
+
+                // Update NiceSelect after changing the value
+                if (jQuery.fn.niceSelect) {
+                    $("#editUserRoleId").val(user.userRoleId || '').niceSelect('update');
+                } else {
+                    console.error('NiceSelect is not loaded');
+                }
+
+                // Store userId in hidden input, dataset, and global variable
+                document.getElementById('editUserId').value = userId;
+                document.getElementById('editUserForm').dataset.userId = userId;
+                currentEditUserId = userId;
+
+                console.log('Stored userId - Hidden:', document.getElementById('editUserId').value);
+                console.log('Stored userId - Dataset:', document.getElementById('editUserForm').dataset.userId);
+                console.log('Stored userId - Global:', currentEditUserId);
+
+                openEditUserModal();
+            } catch (error) {
+                console.error('Error fetching user:', error);
+                showMessage('Error fetching user data', 'error');
+            }
         }
 
         // Delete user
         async function deleteUser(userId) {
             if (confirm('Are you sure you want to delete this user?')) {
                 try {
-                    await fetch(`${USER_API_BASE_URL}/${userId}`, {
+                    await fetch(`http://192.168.3.77:3001/users/${userId}`, {
                         method: 'DELETE',
                     });
                     if (isPaginatedView) {
@@ -574,13 +665,20 @@
 
         // Form Submission with User Role Integration
         $(document).ready(function () {
+            // Initialize NiceSelect on page load with a check
+            if (jQuery.fn.niceSelect) {
+                $("#UserRoleId").niceSelect({ searchable: true });
+                $("#editUserRoleId").niceSelect({ searchable: true });
+            } else {
+                console.error('NiceSelect library failed to load');
+            }
+
             $("#addUserForm").submit(function (event) {
                 event.preventDefault();
 
                 const password = $("#password").val();
                 const confirmPassword = $("#ConfirmPassword").val();
 
-                // Client-side validation
                 if (!$("#FirstName").val()) {
                     $("#FirstNameField").addClass("has-error");
                     showMessage("First Name is required", "error");
@@ -625,7 +723,7 @@
                     notes: $("textarea[name='notes']").val() || null,
                 };
 
-                fetch(`${USER_API_BASE_URL}`, {
+                fetch('http://192.168.3.77:3001/users', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData),
@@ -649,12 +747,109 @@
                 });
             });
 
-            // Remove error class on input
+            $("#editUserForm").submit(async function (event) {
+                event.preventDefault();
+
+                // Prioritize hidden input, then dataset, then global variable
+                const userId = Number(document.getElementById('editUserId').value) || 
+                              Number(this.dataset.userId) || 
+                              currentEditUserId;
+
+                console.log('Submitting update for user ID:', userId);
+                console.log('Hidden userId:', document.getElementById('editUserId').value);
+                console.log('Dataset userId:', this.dataset.userId);
+                console.log('Global userId:', currentEditUserId);
+
+                if (isNaN(userId) || !userId) {
+                    showMessage('Invalid user ID', 'error');
+                    return;
+                }
+
+                const password = $("#editPassword").val();
+                const confirmPassword = $("#editConfirmPassword").val();
+
+                if (!$("#editFirstName").val()) {
+                    $("#editFirstNameField").addClass("has-error");
+                    showMessage("First Name is required", "error");
+                    return;
+                }
+                if (!$("#editLastName").val()) {
+                    $("#editLastNameField").addClass("has-error");
+                    showMessage("Last Name is required", "error");
+                    return;
+                }
+                if (!$("#editUserName").val()) {
+                    $("#editUserNameField").addClass("has-error");
+                    showMessage("User Name is required", "error");
+                    return;
+                }
+                if (password && password !== confirmPassword) {
+                    $("#editPasswordField").addClass("has-error");
+                    $("#editConfirmPasswordField").addClass("has-error");
+                    showMessage("Passwords do not match", "error");
+                    return;
+                }
+                if (!$("#editUserRoleId").val()) {
+                    $("#editUserRoleField").addClass("has-error");
+                    showMessage("User Role is required", "error");
+                    return;
+                }
+
+                const formData = {
+                    firstName: $("#editFirstName").val(),
+                    lastName: $("#editLastName").val(),
+                    userName: $("#editUserName").val(),
+                    contactNo: $("#editContactNo").val() || null,
+                    emailId: $("#editEmailId").val() || null,
+                    address: $("#editAddress").val() || null,
+                    userRoleId: parseInt($("#editUserRoleId").val()),
+                    notes: $("#editNotes").val() || null,
+                };
+
+                if (password) {
+                    formData.password = password;
+                }
+
+                try {
+                    const response = await fetch(`http://192.168.3.77:3001/users/${userId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData),
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to update user');
+                    }
+                    const data = await response.json();
+
+                    showMessage(data.message, 'success');
+                    closeEditUserModal();
+                    currentEditUserId = null; // Reset after success
+                    if (isPaginatedView) {
+                        fetchUsers();
+                    } else {
+                        fetchAllUsers();
+                    }
+                } catch (error) {
+                    console.error('Update error:', error);
+                    showMessage(error.message || 'Error updating user', 'error');
+                }
+            });
+
             $("#FirstName, #LastName, #email, #password, #ConfirmPassword, #UserRoleId").on("input change", function () {
                 $(this).closest(".form-group").removeClass("has-error").addClass("has-success");
             });
 
+            $("#editFirstName, #editLastName, #editUserName, #editPassword, #editConfirmPassword, #editUserRoleId").on("input change", function () {
+                $(this).closest(".form-group").removeClass("has-error").addClass("has-success");
+            });
+
             $("#email").on("input", function () {
+                this.value = this.value.replace(/\s+/g, "").toLowerCase();
+            });
+
+            $("#editUserName").on("input", function () {
                 this.value = this.value.replace(/\s+/g, "").toLowerCase();
             });
         });
@@ -676,7 +871,7 @@
             setTimeout(() => messageBox.remove(), 3000);
         }
 
-        // Initial fetch - Show all users by default
+        // Initial fetch
         fetchAllUsers();
     </script>
 </body>
