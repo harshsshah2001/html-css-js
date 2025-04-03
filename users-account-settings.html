@@ -2797,54 +2797,66 @@
             <div class="dvanimation animate__animated p-6" :class="[$store.app.animation]">
                 <!-- start main content section -->
                 <div class="container mx-auto p-6">
-<!-- Roles Table with Integrated Header -->
-<div class="bg-white rounded-lg shadow overflow-hidden">
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-6 px-6 pt-6">
-        <h1 class="text-2xl font-bold text-gray-800">User Role Management</h1>
-        <button id="addRoleBtn" class="btn btn-primary">
-            Add User Role
-        </button>
-    </div>
+                    <!-- Roles Table with Integrated Header -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <!-- Header -->
+                        <div class="flex justify-between items-center mb-6 px-6 pt-6">
+                            <h1 class="text-2xl font-bold text-gray-800">User Role Management</h1>
+                            <button id="addRoleBtn" class="btn btn-primary">
+                                Add User Role
+                            </button>
+                        </div>
 
-    <!-- Table -->
-    <table class="min-w-full">
-        <thead class="bg-gray-50">
-            <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role Name</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Active</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-            </tr>
-        </thead>
-        <tbody id="rolesTableBody" class="divide-y divide-gray-200">
-            <!-- Dynamically populated -->
-        </tbody>
-    </table>
-</div>
-                    
+                        <!-- Table -->
+                        <table class="min-w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role
+                                        Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Active
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="rolesTableBody" class="divide-y divide-gray-200">
+                                <!-- Dynamically populated -->
+                            </tbody>
+                        </table>
+                    </div>
+
                     <!-- Create/Edit Role Modal -->
                     <div id="roleModal" class="modal">
                         <div class="modal-content">
                             <div class="flex justify-between items-center mb-4">
                                 <h2 id="modalTitle" class="text-xl font-semibold text-gray-800"></h2>
-                                <span class="close-btn text-gray-500 hover:text-gray-800" onclick="closeModal()">×</span>
+                                <span class="close-btn text-gray-500 hover:text-gray-800"
+                                    onclick="closeModal()">×</span>
                             </div>
                             <form id="roleForm">
                                 <div class="mb-4">
                                     <label class="block text-sm font-medium text-gray-700">Role Name</label>
-                                    <input type="text" id="roleName" name="UserRoleName" class="mt-1 block w-full border border-gray-300 rounded-md p-2" placeholder="Enter User Role Name" required>
+                                    <input type="text" id="roleName" name="UserRoleName"
+                                        class="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                        placeholder="Enter User Role Name" required>
                                 </div>
                                 <div class="mb-4">
                                     <h3 class="text-lg font-medium text-gray-800">Permissions</h3>
                                     <table class="min-w-full mt-2">
                                         <thead class="bg-gray-50">
                                             <tr>
-                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Permission</th>
-                                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">Read</th>
-                                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">Create</th>
-                                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">Update</th>
-                                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">Delete</th>
-                                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">Execute</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">
+                                                    Permission</th>
+                                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">Read
+                                                </th>
+                                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">
+                                                    Create</th>
+                                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">
+                                                    Update</th>
+                                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">
+                                                    Delete</th>
+                                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">
+                                                    Execute</th>
                                             </tr>
                                         </thead>
                                         <tbody id="permissionsTable" class="divide-y divide-gray-200">
@@ -2897,14 +2909,11 @@
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td class="px-6 py-4 text-sm text-gray-900">${role.userRoleName}</td>
-<td>
-    <span class="toggle-icon" id="toggleActive_${role.id}" onclick="toggleActive(${role.id}, ${!role.active})">
-        <i class="${role.active ? 'fas fa-toggle-on active' : 'fas fa-toggle-off inactive'}"></i>
-    </span>
-</td>
-
-
-
+                        <td>
+                            <span class="toggle-icon" id="toggleActive_${role.id}" onclick="toggleActive(${role.id}, ${!role.active})">
+                                <i class="${role.active ? 'fas fa-toggle-on active' : 'fas fa-toggle-off inactive'}"></i>
+                            </span>
+                        </td>
 
                         <td class="action-icons">
                             <i class="fas fa-edit" onclick="editRole(${role.id})"></i>
@@ -2922,63 +2931,65 @@
         }
 
         // Function to toggle the active status of a role
-// Function to toggle the active status of a role
-async function toggleActive(roleId, isActive) {
-    try {
-        // Update the UI immediately for better user experience
-        const toggleIcon = document.getElementById(`toggleActive_${roleId}`);
-        toggleIcon.innerHTML = `<i class="${isActive ? 'fas fa-toggle-on' : 'fas fa-toggle-off'}"></i>`;
+        async function toggleActive(roleId, currentActiveStatus) {
+            try {
+                // Update the UI immediately for better user experience
+                const toggleIcon = document.getElementById(`toggleActive_${roleId}`);
+                toggleIcon.innerHTML = `<i class="${currentActiveStatus ? 'fas fa-toggle-off' : 'fas fa-toggle-on'}"></i>`;
 
-        // Fetch the current role data to get UserRoleName and permissions
-        const roleResponse = await fetch(`${API_BASE_URL}/${roleId}`, { method: 'GET' });
-        if (!roleResponse.ok) {
-            const error = await roleResponse.json();
-            throw new Error(error.message || 'Failed to fetch role');
+                // Fetch the current role data
+                const roleResponse = await fetch(`${API_BASE_URL}/${roleId}`, { method: 'GET' });
+                if (!roleResponse.ok) {
+                    const error = await roleResponse.json();
+                    throw new Error(error.message || 'Failed to fetch role');
+                }
+                const role = await roleResponse.json();
+
+                // Format the permissions
+                const formattedPermissions = role.permissions.map(perm => ({
+                    id: perm.permissionId,
+                    IsRead: perm.isRead,
+                    IsCreate: perm.isCreate,
+                    IsUpdate: perm.isUpdate,
+                    IsDelete: perm.isDelete,
+                    IsExecute: perm.isExecute,
+                }));
+
+                // Prepare the payload with the new active status
+                const payload = {
+                    UserRoleName: role.userRoleName,
+                    Active: !currentActiveStatus, // Toggle the current status
+                    permissions: formattedPermissions,
+                };
+
+                // Send the PUT request to update the role
+                const response = await fetch(`${API_BASE_URL}/${roleId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to update active status');
+                }
+
+                // Update the UI with the new state after success
+                toggleIcon.innerHTML = `<i class="${!currentActiveStatus ? 'fas fa-toggle-on' : 'fas fa-toggle-off'}"></i>`;
+                // Update the onclick handler dynamically
+                toggleIcon.onclick = () => toggleActive(roleId, !currentActiveStatus);
+
+            } catch (error) {
+                console.error('Error updating active status:', error);
+                // Revert the UI on error
+                toggleIcon.innerHTML = `<i class="${currentActiveStatus ? 'fas fa-toggle-on' : 'fas fa-toggle-off'}"></i>`;
+                alert(`Error: ${error.message}`);
+            }
         }
-        const role = await roleResponse.json();
 
-        // Format the permissions to match the expected structure
-        const formattedPermissions = role.permissions.map(perm => ({
-            id: perm.permissionId,
-            IsRead: perm.isRead,
-            IsCreate: perm.isCreate,
-            IsUpdate: perm.isUpdate,
-            IsDelete: perm.isDelete,
-            IsExecute: perm.isExecute,
-        }));
 
-        // Prepare the payload with UserRoleName, Active, and permissions
-        const payload = {
-            UserRoleName: role.userRoleName,
-            Active: isActive,
-            permissions: formattedPermissions,
-        };
 
-        // Send the PUT request to update the role
-        const response = await fetch(`${API_BASE_URL}/${roleId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Failed to update active status');
-        }
-
-        // Optionally refresh the UI or data here if needed
-        // e.g., fetchRoles() if you have a function to reload the role list
-
-    } catch (error) {
-        console.error('Error updating active status:', error);
-        // Revert the UI on error to reflect the actual state
-        toggleIcon.innerHTML = `<i class="${!isActive ? 'fas fa-toggle-on' : 'fas fa-toggle-off'}"></i>`;
-        alert(`Error: ${error.message}`);
-    }
-}
-      
-
-// Fetch permissions and populate the table (editable), only showing "User Management"
+        // Fetch permissions and populate the table (editable), only showing "User Management"
         async function loadPermissions(permissionsData = []) {
             try {
                 const response = await fetch(`${API_BASE_URL}/permissions/all`, { method: 'GET' });
@@ -2989,7 +3000,7 @@ async function toggleActive(roleId, isActive) {
                 const permissions = await response.json();
                 // Filter to only include "User Management"
                 const filteredPermissions = permissions.filter(perm => perm.permissionName === "User Management");
-                
+
                 const tbody = document.getElementById('permissionsTable');
                 tbody.innerHTML = '';
                 if (filteredPermissions.length === 0) {
@@ -3091,61 +3102,61 @@ async function toggleActive(roleId, isActive) {
 
         // Form submission
         // Form submission
-// Form submission
-document.getElementById('roleForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const roleName = document.getElementById('roleName').value;
-    const permissions = collectPermissions();
+        // Form submission
+        document.getElementById('roleForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const roleName = document.getElementById('roleName').value;
+            const permissions = collectPermissions();
 
-    let data;
-    if (isEditMode) {
-        // Fetch the current role to get its active status
-        try {
-            const response = await fetch(`${API_BASE_URL}/${currentRoleId}`, { method: 'GET' });
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to fetch role');
+            let data;
+            if (isEditMode) {
+                // Fetch the current role to get its active status
+                try {
+                    const response = await fetch(`${API_BASE_URL}/${currentRoleId}`, { method: 'GET' });
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.message || 'Failed to fetch role');
+                    }
+                    const role = await response.json();
+                    // Include UserRoleName, Active, and permissions in the payload for editing
+                    data = {
+                        UserRoleName: roleName,
+                        Active: role.active, // Use the current active status
+                        permissions,
+                    };
+                } catch (error) {
+                    console.error('Error fetching role for active status:', error);
+                    document.getElementById('formError').textContent = error.message;
+                    return;
+                }
+            } else {
+                // For creating a new role, do NOT include Active (backend sets it to true by default)
+                data = {
+                    UserRoleName: roleName,
+                    permissions,
+                };
             }
-            const role = await response.json();
-            // Include UserRoleName, Active, and permissions in the payload for editing
-            data = {
-                UserRoleName: roleName,
-                Active: role.active, // Use the current active status
-                permissions,
-            };
-        } catch (error) {
-            console.error('Error fetching role for active status:', error);
-            document.getElementById('formError').textContent = error.message;
-            return;
-        }
-    } else {
-        // For creating a new role, do NOT include Active (backend sets it to true by default)
-        data = {
-            UserRoleName: roleName,
-            permissions,
-        };
-    }
 
-    const url = isEditMode ? `${API_BASE_URL}/${currentRoleId}` : `${API_BASE_URL}`;
-    const method = isEditMode ? 'PUT' : 'POST';
+            const url = isEditMode ? `${API_BASE_URL}/${currentRoleId}` : `${API_BASE_URL}`;
+            const method = isEditMode ? 'PUT' : 'POST';
 
-    try {
-        const response = await fetch(url, {
-            method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                });
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || `Failed to ${isEditMode ? 'update' : 'create'} role`);
+                }
+                closeModal();
+                loadRoles();
+            } catch (error) {
+                console.error(`Error ${isEditMode ? 'updating' : 'creating'} role:`, error);
+                document.getElementById('formError').textContent = error.message;
+            }
         });
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || `Failed to ${isEditMode ? 'update' : 'create'} role`);
-        }
-        closeModal();
-        loadRoles();
-    } catch (error) {
-        console.error(`Error ${isEditMode ? 'updating' : 'creating'} role:`, error);
-        document.getElementById('formError').textContent = error.message;
-    }
-});
 
         // Delete role
         async function deleteRole(id) {
