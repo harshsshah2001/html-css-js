@@ -2894,6 +2894,23 @@
         let isEditMode = false;
         let currentRoleId = null;
 
+
+        const showMessage = (msg = 'Example notification text.', type = 'success', position = 'top-right', showCloseButton = true, duration = 3000) => {
+            const toast = window.Swal.mixin({
+                toast: true,
+                position: position,
+                showConfirmButton: false,
+                timer: duration,
+                showCloseButton: showCloseButton,
+                padding: '10px 20px',
+            });
+    
+            toast.fire({
+                icon: type,
+                title: msg,
+            });
+        };
+
         // Fetch and display all roles in the table
         async function loadRoles() {
             try {
