@@ -11,6 +11,8 @@
         'index.html',
         'apps-chat.html',
         'apps-todolist.html',
+        'users-profile.html',
+        'users-account-settings.html',
         
         // Add more protected pages here
     ];
