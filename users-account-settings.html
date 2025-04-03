@@ -3007,98 +3007,102 @@
             });
         };
 
-        // Fetch and display all roles in the table
-        async function loadRoles() {
-            try {
-                const response = await fetch(`${API_BASE_URL}`, { method: 'GET' });
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.message || 'Failed to fetch roles');
-                }
-                const roles = await response.json();
-                const tbody = document.getElementById('rolesTableBody');
-                tbody.innerHTML = '';
-                roles.forEach(role => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td class="px-6 py-4 text-sm text-gray-900">${role.userRoleName}</td>
-                        <td>
-                            <span class="toggle-icon" id="toggleActive_${role.id}" onclick="toggleActive(${role.id}, ${!role.active})">
-                                <i class="${role.active ? 'fas fa-toggle-on active' : 'fas fa-toggle-off inactive'}"></i>
-                            </span>
-                        </td>
+       // Fetch and display all roles in the table
+async function loadRoles() {
+    try {
+        const response = await fetch(`${API_BASE_URL}`, { method: 'GET' });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to fetch roles');
+        }
+        const roles = await response.json();
+        const tbody = document.getElementById('rolesTableBody');
+        tbody.innerHTML = '';
+        roles.forEach(role => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="px-6 py-4 text-sm text-gray-900">${role.userRoleName}</td>
+                <td>
+                    <span class="toggle-icon" id="toggleActive_${role.id}">
+                        <i class="${role.active ? 'fas fa-toggle-on active' : 'fas fa-toggle-off inactive'}"></i>
+                    </span>
+                </td>
+                <td class="action-icons">
+                    <i class="fas fa-edit" onclick="editRole(${role.id})"></i>
+                    <i class="fas fa-trash" onclick="deleteRole(${role.id})"></i>
+                </td>
+            `;
+            tbody.appendChild(tr);
+            // Add event listener programmatically
+            const toggleIcon = document.getElementById(`toggleActive_${role.id}`);
+            toggleIcon.addEventListener('click', () => toggleActive(role.id, role.active));
+        });
+    } catch (error) {
+        console.error('Error loading roles:', error);
+        alert(`Error: ${error.message}`);
+    }
+}
 
-                        <td class="action-icons">
-                            <i class="fas fa-edit" onclick="editRole(${role.id})"></i>
-                            <i class="fas fa-trash" onclick="deleteRole(${role.id})"></i>
-                        </td>
+// Function to toggle the active status of a role
+async function toggleActive(roleId, currentActiveStatus) {
+    const toggleIcon = document.getElementById(`toggleActive_${roleId}`);
+    const icon = toggleIcon.querySelector('i');
+    
+    try {
+        // Update the UI immediately for better user experience
+        icon.classList.remove(currentActiveStatus ? 'fa-toggle-on' : 'fa-toggle-off');
+        icon.classList.add(currentActiveStatus ? 'fa-toggle-off' : 'fa-toggle-on');
 
+        // Fetch the current role data
+        const roleResponse = await fetch(`${API_BASE_URL}/${roleId}`, { method: 'GET' });
+        if (!roleResponse.ok) {
+            const error = await roleResponse.json();
+            throw new Error(error.message || 'Failed to fetch role');
+        }
+        const role = await roleResponse.json();
 
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (error) {
-                console.error('Error loading roles:', error);
-                alert(`Error: ${error.message}`);
-            }
+        // Format the permissions
+        const formattedPermissions = role.permissions.map(perm => ({
+            id: perm.permissionId,
+            IsRead: perm.isRead,
+            IsCreate: perm.isCreate,
+            IsUpdate: perm.isUpdate,
+            IsDelete: perm.isDelete,
+            IsExecute: perm.isExecute,
+        }));
+
+        // Prepare the payload with the new active status
+        const payload = {
+            UserRoleName: role.userRoleName,
+            Active: !currentActiveStatus, // Toggle the current status
+            permissions: formattedPermissions,
+        };
+
+        // Send the PUT request to update the role
+        const response = await fetch(`${API_BASE_URL}/${roleId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to update active status');
         }
 
-        // Function to toggle the active status of a role
-        async function toggleActive(roleId, currentActiveStatus) {
-            try {
-                // Update the UI immediately for better user experience
-                const toggleIcon = document.getElementById(`toggleActive_${roleId}`);
-                toggleIcon.innerHTML = `<i class="${currentActiveStatus ? 'fas fa-toggle-off' : 'fas fa-toggle-on'}"></i>`;
+        // Update the event listener with the new state
+        toggleIcon.replaceWith(toggleIcon.cloneNode(true)); // Remove old listeners
+        const newToggleIcon = document.getElementById(`toggleActive_${roleId}`);
+        newToggleIcon.addEventListener('click', () => toggleActive(roleId, !currentActiveStatus));
 
-                // Fetch the current role data
-                const roleResponse = await fetch(`${API_BASE_URL}/${roleId}`, { method: 'GET' });
-                if (!roleResponse.ok) {
-                    const error = await roleResponse.json();
-                    throw new Error(error.message || 'Failed to fetch role');
-                }
-                const role = await roleResponse.json();
-
-                // Format the permissions
-                const formattedPermissions = role.permissions.map(perm => ({
-                    id: perm.permissionId,
-                    IsRead: perm.isRead,
-                    IsCreate: perm.isCreate,
-                    IsUpdate: perm.isUpdate,
-                    IsDelete: perm.isDelete,
-                    IsExecute: perm.isExecute,
-                }));
-
-                // Prepare the payload with the new active status
-                const payload = {
-                    UserRoleName: role.userRoleName,
-                    Active: !currentActiveStatus, // Toggle the current status
-                    permissions: formattedPermissions,
-                };
-
-                // Send the PUT request to update the role
-                const response = await fetch(`${API_BASE_URL}/${roleId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.message || 'Failed to update active status');
-                }
-
-                // Update the UI with the new state after success
-                toggleIcon.innerHTML = `<i class="${!currentActiveStatus ? 'fas fa-toggle-on' : 'fas fa-toggle-off'}"></i>`;
-                // Update the onclick handler dynamically
-                toggleIcon.onclick = () => toggleActive(roleId, !currentActiveStatus);
-
-            } catch (error) {
-                console.error('Error updating active status:', error);
-                // Revert the UI on error
-                toggleIcon.innerHTML = `<i class="${currentActiveStatus ? 'fas fa-toggle-on' : 'fas fa-toggle-off'}"></i>`;
-                alert(`Error: ${error.message}`);
-            }
-        }
+    } catch (error) {
+        console.error('Error updating active status:', error);
+        // Revert the UI on error
+        icon.classList.remove(currentActiveStatus ? 'fa-toggle-off' : 'fa-toggle-on');
+        icon.classList.add(currentActiveStatus ? 'fa-toggle-on' : 'fa-toggle-off');
+        alert(`Error: ${error.message}`);
+    }
+}
 
 
 
