@@ -348,7 +348,6 @@
 
         .action-icons {
             display: flex;
-            justify-content: center;
             /* Center horizontally */
             align-items: center;
             /* Center vertically */
@@ -2833,7 +2832,6 @@
                     </div>
                 </div>
 
-                <!-- Add User Modal -->
 <!-- Add User Modal -->
 <div class="modal" id="addUserModal">
     <div class="modal-content">
@@ -3125,32 +3123,38 @@
     
         // Toggle user active status
         async function toggleUserStatus(userId) {
-            try {
-                let toggleIcon = document.getElementById(`toggleActive_${userId}`);
-                let isActive = toggleIcon.querySelector("i").classList.contains("fa-toggle-on");
-    
-                toggleIcon.innerHTML = isActive
-                    ? '<i class="fas fa-toggle-off inactive"></i>' // Change to OFF
-                    : '<i class="fas fa-toggle-on active"></i>'; // Change to ON
+    try {
+        let toggleIcon = document.getElementById(`toggleActive_${userId}`);
+        let isActive = toggleIcon.querySelector("i").classList.contains("fa-toggle-on");
 
-                // Send API request to update status in backend
-                await fetch(`http://192.168.3.73:3001/users/${userId}/toggle`, {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ isActive: !isActive }),
-                });
-                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-    
-                if (isPaginatedView) fetchUsers();
-                else fetchAllUsers();
-            } catch (error) {
-                console.error("Error toggling user status:", error);
-                showMessage("Error toggling user status: " + error.message, "error");
-                if (isPaginatedView) fetchUsers();
-                else fetchAllUsers();
-            }
+        // Update the UI immediately
+        toggleIcon.innerHTML = isActive
+            ? '<i class="fas fa-toggle-off inactive"></i>' // Change to OFF
+            : '<i class="fas fa-toggle-on active"></i>'; // Change to ON
+
+        // Send API request to update status in backend
+        const response = await fetch(`http://192.168.3.73:3001/users/${userId}/toggle`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ isActive: !isActive }),
+        });
+
+        // Check if the response is OK (status in the range 200-299)
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
         }
-    
+
+        // Refresh the user list based on the view
+        if (isPaginatedView) fetchUsers();
+        else fetchAllUsers();
+    } catch (error) {
+        console.error("Error toggling user status:", error);
+        showMessage("Error toggling user status: " + error.message, "error");
+        // Revert UI or refresh data on error
+        if (isPaginatedView) fetchUsers();
+        else fetchAllUsers();
+    }
+}   
         // Edit user
         async function editUser(userId) {
             try {
