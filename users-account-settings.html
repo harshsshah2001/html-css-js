@@ -2922,8 +2922,7 @@
                         <div class="modal-content">
                             <div class="flex justify-between items-center mb-4">
                                 <h2 id="modalTitle" class="text-xl font-semibold text-gray-800"></h2>
-                                <span class="close-btn text-gray-500 hover:text-gray-800"
-                                    onclick="closeModal()">×</span>
+                                <span class="close-btn text-gray-500 hover:text-gray-800" onclick="closeModal()">×</span>
                             </div>
                             <form id="roleForm">
                                 <div class="mb-4">
@@ -2937,18 +2936,12 @@
                                     <table class="min-w-full mt-2">
                                         <thead class="bg-gray-50">
                                             <tr>
-                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">
-                                                    Permission</th>
-                                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">Read
-                                                </th>
-                                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">
-                                                    Create</th>
-                                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">
-                                                    Update</th>
-                                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">
-                                                    Delete</th>
-                                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">
-                                                    Execute</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Permission</th>
+                                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">Read</th>
+                                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">Create</th>
+                                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">Update</th>
+                                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">Delete</th>
+                                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">Execute</th>
                                             </tr>
                                         </thead>
                                         <tbody id="permissionsTable" class="divide-y divide-gray-200">
@@ -2957,342 +2950,350 @@
                                     </table>
                                 </div>
                                 <div id="formError" class="error-message"></div>
-                                <button type="submit" class="btn btn-primary">Save</button>
+                                <div class="flex justify-end space-x-2">
+                                    <button type="submit" id="createBtn" class="btn btn-primary" style="display: none;">Create</button>
+                                    <button type="submit" id="updateBtn" class="btn btn-primary" style="display: none;">Update</button>
+                                </div>
                             </form>
                         </div>
                     </div>
-                </div>
-                <!-- end main content section -->
-            </div>
-
-            <!-- start footer section -->
-            <div class="mt-auto p-6 pt-0 text-center dark:text-white-dark ltr:sm:text-left rtl:sm:text-right">
-                © <span id="footer-year">2022</span>. Vristo All rights reserved.
-            </div>
-            <!-- end footer section -->
-        </div>
-    </div>
-
-    <script src="assets/js/alpine-collaspe.min.js"></script>
-    <script src="assets/js/alpine-persist.min.js"></script>
-    <script defer src="assets/js/alpine-ui.min.js"></script>
-    <script defer src="assets/js/alpine-focus.min.js"></script>
-    <script defer src="assets/js/alpine.min.js"></script>
-    <script src="assets/js/custom.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/nice-select/1.1.0/js/jquery.nice-select.min.js"></script>
-    <script>
-        const API_BASE_URL = 'http://192.168.3.74:3001/userroles';
-        let isEditMode = false;
-        let currentRoleId = null;
-
-
-        const showMessage = (msg = 'Example notification text.', type = 'success', position = 'top-right', showCloseButton = true, duration = 3000) => {
-            const toast = window.Swal.mixin({
-                toast: true,
-                position: position,
-                showConfirmButton: false,
-                timer: duration,
-                showCloseButton: showCloseButton,
-                padding: '10px 20px',
-            });
-    
-            toast.fire({
-                icon: type,
-                title: msg,
-            });
-        };
-
-       // Fetch and display all roles in the table
-async function loadRoles() {
-    try {
-        const response = await fetch(`${API_BASE_URL}`, { method: 'GET' });
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Failed to fetch roles');
-        }
-        const roles = await response.json();
-        const tbody = document.getElementById('rolesTableBody');
-        tbody.innerHTML = '';
-        roles.forEach(role => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="px-6 py-4 text-sm text-gray-900">${role.userRoleName}</td>
-                <td>
-                    <span class="toggle-icon" id="toggleActive_${role.id}">
-                        <i class="${role.active ? 'fas fa-toggle-on active' : 'fas fa-toggle-off inactive'}"></i>
-                    </span>
-                </td>
-                <td class="action-icons">
-                    <i class="fas fa-edit" onclick="editRole(${role.id})"></i>
-                    <i class="fas fa-trash" onclick="deleteRole(${role.id})"></i>
-                </td>
-            `;
-            tbody.appendChild(tr);
-            // Add event listener programmatically
-            const toggleIcon = document.getElementById(`toggleActive_${role.id}`);
-            toggleIcon.addEventListener('click', () => toggleActive(role.id, role.active));
-        });
-    } catch (error) {
-        console.error('Error loading roles:', error);
-        alert(`Error: ${error.message}`);
-    }
-}
-
-// Function to toggle the active status of a role
-async function toggleActive(roleId, currentActiveStatus) {
-    const toggleIcon = document.getElementById(`toggleActive_${roleId}`);
-    const icon = toggleIcon.querySelector('i');
-    
-    try {
-        // Update the UI immediately for better user experience
-        icon.classList.remove(currentActiveStatus ? 'fa-toggle-on' : 'fa-toggle-off');
-        icon.classList.add(currentActiveStatus ? 'fa-toggle-off' : 'fa-toggle-on');
-
-        // Fetch the current role data
-        const roleResponse = await fetch(`${API_BASE_URL}/${roleId}`, { method: 'GET' });
-        if (!roleResponse.ok) {
-            const error = await roleResponse.json();
-            throw new Error(error.message || 'Failed to fetch role');
-        }
-        const role = await roleResponse.json();
-
-        // Format the permissions
-        const formattedPermissions = role.permissions.map(perm => ({
-            id: perm.permissionId,
-            IsRead: perm.isRead,
-            IsCreate: perm.isCreate,
-            IsUpdate: perm.isUpdate,
-            IsDelete: perm.isDelete,
-            IsExecute: perm.isExecute,
-        }));
-
-        // Prepare the payload with the new active status
-        const payload = {
-            UserRoleName: role.userRoleName,
-            Active: !currentActiveStatus, // Toggle the current status
-            permissions: formattedPermissions,
-        };
-
-        // Send the PUT request to update the role
-        const response = await fetch(`${API_BASE_URL}/${roleId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Failed to update active status');
-        }
-
-        // Update the event listener with the new state
-        toggleIcon.replaceWith(toggleIcon.cloneNode(true)); // Remove old listeners
-        const newToggleIcon = document.getElementById(`toggleActive_${roleId}`);
-        newToggleIcon.addEventListener('click', () => toggleActive(roleId, !currentActiveStatus));
-
-    } catch (error) {
-        console.error('Error updating active status:', error);
-        // Revert the UI on error
-        icon.classList.remove(currentActiveStatus ? 'fa-toggle-off' : 'fa-toggle-on');
-        icon.classList.add(currentActiveStatus ? 'fa-toggle-on' : 'fa-toggle-off');
-        alert(`Error: ${error.message}`);
-    }
-}
-
-
-
-        // Fetch permissions and populate the table (editable), only showing "User Management"
-        async function loadPermissions(permissionsData = []) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/permissions/all`, { method: 'GET' });
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.message || `Failed to fetch permissions: ${response.status}`);
-                }
-                const permissions = await response.json();
-                // Filter to only include "User Management"
-                const filteredPermissions = permissions.filter(perm => perm.permissionName === "User Management");
-
-                const tbody = document.getElementById('permissionsTable');
-                tbody.innerHTML = '';
-                if (filteredPermissions.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-2 text-center text-gray-500">No permissions available</td></tr>';
-                    return;
-                }
-                filteredPermissions.forEach(perm => {
-                    const existingPerm = permissionsData.find(p => p.permissionId === perm.id) || {};
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td class="px-4 py-2 text-sm text-gray-900 ${perm.isMaster ? 'font-bold' : ''}">${perm.permissionName}</td>
-                        <td class="px-4 py-2 text-center">
-                            <input type="checkbox" name="IsRead${perm.id}" ${existingPerm.isRead ? 'checked' : ''} ${perm.isReadDisplay ? '' : 'disabled'}>
-                        </td>
-                        <td class="px-4 py-2 text-center">
-                            <input type="checkbox" name="IsCreate${perm.id}" ${existingPerm.isCreate ? 'checked' : ''} ${perm.isCreateDisplay ? '' : 'disabled'}>
-                        </td>
-                        <td class="px-4 py-2 text-center">
-                            <input type="checkbox" name="IsUpdate${perm.id}" ${existingPerm.isUpdate ? 'checked' : ''} ${perm.isUpdateDisplay ? '' : 'disabled'}>
-                        </td>
-                        <td class="px-4 py-2 text-center">
-                            <input type="checkbox" name="IsDelete${perm.id}" ${existingPerm.isDelete ? 'checked' : ''} ${perm.isDeleteDisplay ? '' : 'disabled'}>
-                        </td>
-                        <td class="px-4 py-2 text-center">
-                            <input type="checkbox" name="IsExecute${perm.id}" ${existingPerm.isExecute ? 'checked' : ''} ${perm.isExecuteDisplay ? '' : 'disabled'}>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (error) {
-                console.error('Error loading permissions:', error);
-                document.getElementById('formError').textContent = error.message;
-            }
-        }
-
-        // Open modal for adding a role
-        document.getElementById('addRoleBtn').addEventListener('click', () => {
-            isEditMode = false;
-            currentRoleId = null;
-            document.getElementById('modalTitle').textContent = 'Add User Role';
-            document.getElementById('roleName').value = '';
-            loadPermissions();
-            document.getElementById('roleModal').style.display = 'flex';
-        });
-
-        // Open modal for editing a role
-        async function editRole(id) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/${id}`, { method: 'GET' });
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.message || 'Failed to fetch role');
-                }
-                const role = await response.json();
-                isEditMode = true;
-                currentRoleId = id;
-                document.getElementById('modalTitle').textContent = 'Edit User Role';
-                document.getElementById('roleName').value = role.userRoleName;
-                const formattedPermissions = role.permissions
-                    .filter(perm => perm.permission.permissionName === "User Management") // Filter for "User Management" during edit
-                    .map(perm => ({
-                        permissionId: perm.permission.id,
-                        isRead: perm.isRead,
-                        isCreate: perm.isCreate,
-                        isUpdate: perm.isUpdate,
-                        isDelete: perm.isDelete,
-                        isExecute: perm.isExecute,
-                    }));
-                loadPermissions(formattedPermissions);
-                document.getElementById('roleModal').style.display = 'flex';
-            } catch (error) {
-                console.error('Error loading role:', error);
-                alert(error.message);
-            }
-        }
-
-        // Close modal
-        function closeModal() {
-            document.getElementById('roleModal').style.display = 'none';
-            document.getElementById('formError').textContent = '';
-        }
-
-        // Collect permissions from the table
-        function collectPermissions() {
-            const permissions = [];
-            document.querySelectorAll('#permissionsTable tr').forEach(row => {
-                const id = parseInt(row.querySelector('input').name.replace('IsRead', ''));
-                permissions.push({
-                    id,
-                    IsRead: row.querySelector(`input[name="IsRead${id}"]`).checked,
-                    IsCreate: row.querySelector(`input[name="IsCreate${id}"]`).checked,
-                    IsUpdate: row.querySelector(`input[name="IsUpdate${id}"]`).checked,
-                    IsDelete: row.querySelector(`input[name="IsDelete${id}"]`).checked,
-                    IsExecute: row.querySelector(`input[name="IsExecute${id}"]`).checked,
-                });
-            });
-            return permissions;
-        }
-
-        // Form submission
-        // Form submission
-        // Form submission
-        document.getElementById('roleForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const roleName = document.getElementById('roleName').value;
-            const permissions = collectPermissions();
-
-            let data;
-            if (isEditMode) {
-                // Fetch the current role to get its active status
-                try {
-                    const response = await fetch(`${API_BASE_URL}/${currentRoleId}`, { method: 'GET' });
-                    if (!response.ok) {
-                        const error = await response.json();
-                        throw new Error(error.message || 'Failed to fetch role');
-                    }
-                    const role = await response.json();
-                    // Include UserRoleName, Active, and permissions in the payload for editing
-                    data = {
-                        UserRoleName: roleName,
-                        Active: role.active, // Use the current active status
-                        permissions,
-                    };
-                } catch (error) {
-                    console.error('Error fetching role for active status:', error);
-                    document.getElementById('formError').textContent = error.message;
-                    return;
-                }
-            } else {
-                // For creating a new role, do NOT include Active (backend sets it to true by default)
-                data = {
-                    UserRoleName: roleName,
-                    permissions,
-                };
-            }
-
-            const url = isEditMode ? `${API_BASE_URL}/${currentRoleId}` : `${API_BASE_URL}`;
-            const method = isEditMode ? 'PUT' : 'POST';
-
-            try {
-                const response = await fetch(url, {
-                    method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data),
-                });
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.message || `Failed to ${isEditMode ? 'update' : 'create'} role`);
-                }
-                closeModal();
-                loadRoles();
-            } catch (error) {
-                console.error(`Error ${isEditMode ? 'updating' : 'creating'} role:`, error);
-                document.getElementById('formError').textContent = error.message;
-            }
-        });
-
-        // Delete role
-        async function deleteRole(id) {
-            if (confirm('Are you sure you want to delete this role?')) {
-                try {
-                    const response = await fetch(`${API_BASE_URL}/${id}`, {
-                        method: 'DELETE',
-                    });
-                    if (!response.ok) {
-                        const error = await response.json();
-                        throw new Error(error.message || 'Failed to delete role');
-                    }
-                    loadRoles();
-                } catch (error) {
-                    console.error('Error deleting role:', error);
-                    alert(error.message);
-                }
-            }
-        }
-
-        // Initial load
-        document.addEventListener('DOMContentLoaded', loadRoles);
-    </script>
+                    <!-- end main content section -->
+                    </div>
+                    
+                    <!-- start footer section -->
+                    <div class="mt-auto p-6 pt-0 text-center dark:text-white-dark ltr:sm:text-left rtl:sm:text-right">
+                        © <span id="footer-year">2022</span>. Vristo All rights reserved.
+                    </div>
+                    <!-- end footer section -->
+                    </div>
+                    </div>
+                    
+                    <script src="assets/js/alpine-collaspe.min.js"></script>
+                    <script src="assets/js/alpine-persist.min.js"></script>
+                    <script defer src="assets/js/alpine-ui.min.js"></script>
+                    <script defer src="assets/js/alpine-focus.min.js"></script>
+                    <script defer src="assets/js/alpine.min.js"></script>
+                    <script src="assets/js/custom.js"></script>
+                    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/nice-select/1.1.0/js/jquery.nice-select.min.js"></script>
+                    <script>
+                        const API_BASE_URL = 'http://192.168.3.74:3001/userroles';
+                        let isEditMode = false;
+                        let currentRoleId = null;
+                    
+                        const showMessage = (msg = 'Example notification text.', type = 'success', position = 'top-right', showCloseButton = true, duration = 3000) => {
+                            const toast = window.Swal.mixin({
+                                toast: true,
+                                position: position,
+                                showConfirmButton: false,
+                                timer: duration,
+                                showCloseButton: showCloseButton,
+                                padding: '10px 20px',
+                            });
+                            toast.fire({
+                                icon: type,
+                                title: msg,
+                            });
+                        };
+                    
+                        // Function to toggle button visibility
+                        function toggleButtons() {
+                            document.getElementById('createBtn').style.display = isEditMode ? 'none' : 'block';
+                            document.getElementById('updateBtn').style.display = isEditMode ? 'block' : 'none';
+                        }
+                    
+                        // Fetch and display all roles in the table
+                        async function loadRoles() {
+                            // ... (keeping existing loadRoles function unchanged)
+                            try {
+                                const response = await fetch(`${API_BASE_URL}`, { method: 'GET' });
+                                if (!response.ok) {
+                                    const error = await response.json();
+                                    throw new Error(error.message || 'Failed to fetch roles');
+                                }
+                                const roles = await response.json();
+                                const tbody = document.getElementById('rolesTableBody');
+                                tbody.innerHTML = '';
+                                roles.forEach(role => {
+                                    const tr = document.createElement('tr');
+                                    tr.innerHTML = `
+                                        <td class="px-6 py-4 text-sm text-gray-900">${role.userRoleName}</td>
+                                        <td>
+                                            <span class="toggle-icon" id="toggleActive_${role.id}">
+                                                <i class="${role.active ? 'fas fa-toggle-on active' : 'fas fa-toggle-off inactive'}"></i>
+                                            </span>
+                                        </td>
+                                        <td class="action-icons">
+                                            <i class="fas fa-edit" onclick="editRole(${role.id})"></i>
+                                            <i class="fas fa-trash" onclick="deleteRole(${role.id})"></i>
+                                        </td>
+                                    `;
+                                    tbody.appendChild(tr);
+                                    const toggleIcon = document.getElementById(`toggleActive_${role.id}`);
+                                    toggleIcon.addEventListener('click', () => toggleActive(role.id, role.active));
+                                });
+                            } catch (error) {
+                                console.error('Error loading roles:', error);
+                                alert(`Error: ${error.message}`);
+                            }
+                        }
+                    
+                        // ... (keeping toggleActive function unchanged)
+                        async function toggleActive(roleId, currentActiveStatus) {
+                            const toggleIcon = document.getElementById(`toggleActive_${roleId}`);
+                            const icon = toggleIcon.querySelector('i');
+                            
+                            try {
+                                icon.classList.remove(currentActiveStatus ? 'fa-toggle-on' : 'fa-toggle-off');
+                                icon.classList.add(currentActiveStatus ? 'fa-toggle-off' : 'fa-toggle-on');
+                    
+                                const roleResponse = await fetch(`${API_BASE_URL}/${roleId}`, { method: 'GET' });
+                                if (!roleResponse.ok) {
+                                    const error = await roleResponse.json();
+                                    throw new Error(error.message || 'Failed to fetch role');
+                                }
+                                const role = await roleResponse.json();
+                    
+                                const formattedPermissions = role.permissions.map(perm => ({
+                                    id: perm.permissionId,
+                                    IsRead: perm.isRead,
+                                    IsCreate: perm.isCreate,
+                                    IsUpdate: perm.isUpdate,
+                                    IsDelete: perm.isDelete,
+                                    IsExecute: perm.isExecute,
+                                }));
+                    
+                                const payload = {
+                                    UserRoleName: role.userRoleName,
+                                    Active: !currentActiveStatus,
+                                    permissions: formattedPermissions,
+                                };
+                    
+                                const response = await fetch(`${API_BASE_URL}/${roleId}`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(payload),
+                                });
+                    
+                                if (!response.ok) {
+                                    const error = await response.json();
+                                    throw new Error(error.message || 'Failed to update active status');
+                                }
+                    
+                                toggleIcon.replaceWith(toggleIcon.cloneNode(true));
+                                const newToggleIcon = document.getElementById(`toggleActive_${roleId}`);
+                                newToggleIcon.addEventListener('click', () => toggleActive(roleId, !currentActiveStatus));
+                            } catch (error) {
+                                console.error('Error updating active status:', error);
+                                icon.classList.remove(currentActiveStatus ? 'fa-toggle-off' : 'fa-toggle-on');
+                                icon.classList.add(currentActiveStatus ? 'fa-toggle-on' : 'fa-toggle-off');
+                                alert(`Error: ${error.message}`);
+                            }
+                        }
+                    
+                        async function loadPermissions(permissionsData = []) {
+                            // ... (keeping existing loadPermissions function unchanged)
+                            try {
+                                const response = await fetch(`${API_BASE_URL}/permissions/all`, { method: 'GET' });
+                                if (!response.ok) {
+                                    const error = await response.json();
+                                    throw new Error(error.message || `Failed to fetch permissions: ${response.status}`);
+                                }
+                                const permissions = await response.json();
+                                const filteredPermissions = permissions.filter(perm => perm.permissionName === "User Management");
+                    
+                                const tbody = document.getElementById('permissionsTable');
+                                tbody.innerHTML = '';
+                                if (filteredPermissions.length === 0) {
+                                    tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-2 text-center text-gray-500">No permissions available</td></tr>';
+                                    return;
+                                }
+                                filteredPermissions.forEach(perm => {
+                                    const existingPerm = permissionsData.find(p => p.permissionId === perm.id) || {};
+                                    const tr = document.createElement('tr');
+                                    tr.innerHTML = `
+                                        <td class="px-4 py-2 text-sm text-gray-900 ${perm.isMaster ? 'font-bold' : ''}">${perm.permissionName}</td>
+                                        <td class="px-4 py-2 text-center">
+                                            <input type="checkbox" name="IsRead${perm.id}" ${existingPerm.isRead ? 'checked' : ''} ${perm.isReadDisplay ? '' : 'disabled'}>
+                                        </td>
+                                        <td class="px-4 py-2 text-center">
+                                            <input type="checkbox" name="IsCreate${perm.id}" ${existingPerm.isCreate ? 'checked' : ''} ${perm.isCreateDisplay ? '' : 'disabled'}>
+                                        </td>
+                                        <td class="px-4 py-2 text-center">
+                                            <input type="checkbox" name="IsUpdate${perm.id}" ${existingPerm.isUpdate ? 'checked' : ''} ${perm.isUpdateDisplay ? '' : 'disabled'}>
+                                        </td>
+                                        <td class="px-4 py-2 text-center">
+                                            <input type="checkbox" name="IsDelete${perm.id}" ${existingPerm.isDelete ? 'checked' : ''} ${perm.isDeleteDisplay ? '' : 'disabled'}>
+                                        </td>
+                                        <td class="px-4 py-2 text-center">
+                                            <input type="checkbox" name="IsExecute${perm.id}" ${existingPerm.isExecute ? 'checked' : ''} ${perm.isExecuteDisplay ? '' : 'disabled'}>
+                                        </td>
+                                    `;
+                                    tbody.appendChild(tr);
+                                });
+                            } catch (error) {
+                                console.error('Error loading permissions:', error);
+                                document.getElementById('formError').textContent = error.message;
+                            }
+                        }
+                    
+                        document.getElementById('addRoleBtn').addEventListener('click', () => {
+                            isEditMode = false;
+                            currentRoleId = null;
+                            document.getElementById('modalTitle').textContent = 'Add User Role';
+                            document.getElementById('roleName').value = '';
+                            loadPermissions();
+                            toggleButtons();
+                            document.getElementById('roleModal').style.display = 'flex';
+                        });
+                    
+                        async function editRole(id) {
+                            try {
+                                const response = await fetch(`${API_BASE_URL}/${id}`, { method: 'GET' });
+                                if (!response.ok) {
+                                    const error = await response.json();
+                                    throw new Error(error.message || 'Failed to fetch role');
+                                }
+                                const role = await response.json();
+                                isEditMode = true;
+                                currentRoleId = id;
+                                document.getElementById('modalTitle').textContent = 'Edit User Role';
+                                document.getElementById('roleName').value = role.userRoleName;
+                                const formattedPermissions = role.permissions
+                                    .filter(perm => perm.permission.permissionName === "User Management")
+                                    .map(perm => ({
+                                        permissionId: perm.permission.id,
+                                        isRead: perm.isRead,
+                                        isCreate: perm.isCreate,
+                                        isUpdate: perm.isUpdate,
+                                        isDelete: perm.isDelete,
+                                        isExecute: perm.isExecute,
+                                    }));
+                                loadPermissions(formattedPermissions);
+                                toggleButtons();
+                                document.getElementById('roleModal').style.display = 'flex';
+                                    } catch (error) {
+                                console.error('Error loading role:', error);
+                                alert(error.message);
+                            }
+                        }
+                    
+                        function closeModal() {
+                            document.getElementById('roleModal').style.display = 'none';
+                            document.getElementById('formError').textContent = '';
+                        }
+                    
+                        function collectPermissions() {
+                            const permissions = [];
+                            document.querySelectorAll('#permissionsTable tr').forEach(row => {
+                                const id = parseInt(row.querySelector('input').name.replace('IsRead', ''));
+                                permissions.push({
+                                    id,
+                                    IsRead: row.querySelector(`input[name="IsRead${id}"]`).checked,
+                                    IsCreate: row.querySelector(`input[name="IsCreate${id}"]`).checked,
+                                    IsUpdate: row.querySelector(`input[name="IsUpdate${id}"]`).checked,
+                                    IsDelete: row.querySelector(`input[name="IsDelete${id}"]`).checked,
+                                    IsExecute: row.querySelector(`input[name="IsExecute${id}"]`).checked,
+                                });
+                            });
+                            return permissions;
+                        }
+                    
+                        async function handleCreate(e) {
+                            e.preventDefault();
+                            const roleName = document.getElementById('roleName').value;
+                            const permissions = collectPermissions();
+                            const data = {
+                                UserRoleName: roleName,
+                                permissions,
+                            };
+                    
+                            try {
+                                const response = await fetch(`${API_BASE_URL}`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(data),
+                                });
+                                if (!response.ok) {
+                                    const error = await response.json();
+                                    throw new Error(error.message || 'Failed to create role');
+                                }
+                                showMessage('Role created successfully', 'success');
+                                closeModal();
+                                loadRoles();
+                            } catch (error) {
+                                console.error('Error creating role:', error);
+                                document.getElementById('formError').textContent = error.message;
+                            }
+                        }
+                    
+                        async function handleUpdate(e) {
+                            e.preventDefault();
+                            const roleName = document.getElementById('roleName').value;
+                            const permissions = collectPermissions();
+                    
+                            try {
+                                const response = await fetch(`${API_BASE_URL}/${currentRoleId}`, { 
+                                    method: 'GET' 
+                                });
+                                if (!response.ok) {
+                                    const error = await response.json();
+                                    throw new Error(error.message || 'Failed to fetch role');
+                                }
+                                const role = await response.json();
+                    
+                                const data = {
+                                    UserRoleName: roleName,
+                                    Active: role.active,
+                                    permissions,
+                                };
+                    
+                                const updateResponse = await fetch(`${API_BASE_URL}/${currentRoleId}`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(data),
+                                });
+                                if (!updateResponse.ok) {
+                                    const error = await updateResponse.json();
+                                    throw new Error(error.message || 'Failed to update role');
+                                }
+                                showMessage('Role updated successfully', 'success');
+                                closeModal();
+                                loadRoles();
+                            } catch (error) {
+                                console.error('Error updating role:', error);
+                                document.getElementById('formError').textContent = error.message;
+                            }
+                        }
+                    
+                        document.getElementById('roleForm').addEventListener('submit', (e) => {
+                            if (isEditMode) {
+                                handleUpdate(e);
+                            } else {
+                                handleCreate(e);
+                            }
+                        });
+                    
+                        async function deleteRole(id) {
+                            if (confirm('Are you sure you want to delete this role?')) {
+                                try {
+                                    const response = await fetch(`${API_BASE_URL}/${id}`, {
+                                        method: 'DELETE',
+                                    });
+                                    if (!response.ok) {
+                                        const error = await response.json();
+                                        throw new Error(error.message || 'Failed to delete role');
+                                    }
+                                    loadRoles();
+                                } catch (error) {
+                                    console.error('Error deleting role:', error);
+                                    alert(error.message);
+                                }
+                            }
+                        }
+                    
+                        document.addEventListener('DOMContentLoaded', loadRoles);
+                    </script>
 
     <script>
         document.addEventListener('alpine:init', () => {
